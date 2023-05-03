@@ -1,12 +1,15 @@
 {
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/app/(.*)",
-      "destination": "/weather"
-    },
+      "src": "index.js",
+      "use": "@now/node"
+    }
+  ],
+  "routes": [
     {
-      "source": "/weather/(.*)",
-      "destination": "/app"
+      "src": "/(.*)",
+      "dest": "/"
     }
   ]
 }

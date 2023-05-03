@@ -2,8 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
-const dbConfig = require("./config/db-config");
-const weatherService = require('./service/weather-service');
+const dbConfig = require("./app/config/db-config");
+const weatherService = require('./app/service/weather-service');
 
 const app = express();
 const originUri = process.env.CORS_ORIGIN || 'http://localhost:4200';
