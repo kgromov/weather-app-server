@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/app/(.*)",
+      "destination": "/weather"
+    },
+    {
+      "source": "/weather/(.*)",
+      "destination": "/app"
+    }
+  ]
+}
