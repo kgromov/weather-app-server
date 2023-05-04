@@ -10,6 +10,8 @@ const originUri = process.env.CORS_ORIGIN || 'http://localhost:4200';
 const corsOptions = {
     origin: `${originUri}`
 };
+console.warn('CORS_ORIGIN = ', process.env.CORS_ORIGIN);
+console.warn('cors options = ', corsOptions);
 
 app.use(express.json())
 app.use(cors(corsOptions));
