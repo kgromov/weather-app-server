@@ -8,10 +8,12 @@ const weatherService = require('./app/service/weather-service');
 const app = express();
 const originUri = process.env.CORS_ORIGIN || 'http://localhost:4200';
 const corsOptions = {
-    origin: `${originUri}`
+    // origin: `${originUri}`
+    // origin: '*'
+    origin: 'https://weather-app-tau-self.vercel.app'
 };
-console.warn('CORS_ORIGIN = ', process.env.CORS_ORIGIN);
-console.warn('cors options = ', corsOptions);
+console.log('CORS_ORIGIN = ', process.env.CORS_ORIGIN);
+console.log('cors options = ', corsOptions);
 
 app.use(express.json())
 app.use(cors(corsOptions));
