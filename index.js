@@ -10,7 +10,7 @@ const originUri = process.env.CORS_ORIGIN || 'http://localhost:4200';
 const corsOptions = {
     // origin: `${originUri}`
     // origin: '*'
-    origin: 'https://weather-app-tau-self.vercel.app'
+    origin: 'https://weather-odessa-app.vercel.app'
 };
 console.log('CORS_ORIGIN = ', process.env.CORS_ORIGIN);
 console.log('cors options = ', corsOptions);
