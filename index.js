@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 
 const dbConfig = require("./app/config/db-config");
 const weatherService = require('./app/service/weather-service');
+const temperatureService = require("./app/service/temperature-service");
 
 const app = express();
 const originUri = process.env.CORS_ORIGIN || 'http://localhost:4200';
@@ -22,6 +23,11 @@ app.use(cors(corsOptions));
 mongoose.connect(dbConfig.uri, {useNewUrlParser: true, useUnifiedTopology: true})
     .then(() => console.log('Successfully connected to MongoDB at ...'))
     .catch(e => console.error('Failed connected to MongoDB...', e));
+
+app.get("/sync", async (req, res) => {
+    await temperatureService.syncForToday();
+    res.status(200).json('Sync is finished');
+});
 
 app.get("/weather/years", async (req, res) => {
     const yearsToShow = await weatherService.getYearsToShow();

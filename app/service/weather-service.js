@@ -33,7 +33,7 @@ const projectTemperaturesStage = {
     },
 };
 // =========== summary ==============
-const DailyTemperature = require("./../model/dayli-temperature").DailyTemperature;
+const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
 exports.getWeatherForToday = async function () {
     const currentDate = new Date().toISOString()/*.slice(0, 10)*/;
     const result = await DailyTemperature.findOne({data: currentDate});
