@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const cron = require("node-cron");
 
 const dbConfig = require("./app/config/db-config");
 const weatherService = require('./app/service/weather-service');
@@ -64,5 +65,12 @@ const port = process.env.PORT | 9000;
 app.listen(port, () => {
     console.log(`Server is started on post ${port}`);
 });
+
+// cron.schedule("*/5 * * * *", async () => {
+cron.schedule("0 0 * * *", async () => {
+    console.log(new Date().toISOString(), ': schedule weather sync');
+    await temperatureService.syncForToday();
+    res.status(200).json('Sync is finished');
+})
 
 module.exports = app
