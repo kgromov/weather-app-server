@@ -1,0 +1,9 @@
+{
+  "cors" : {
+    "origin": "http://localhost:4200"
+  },
+  "sync" : {
+    "sourceUri": "https://sinoptik.ua/",
+    "cityPath": "погода-одесса"
+  }
+}

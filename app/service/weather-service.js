@@ -1,4 +1,6 @@
-const mongoose = require("mongoose");
+const logger = require('./../startup/logging');
+const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
+
 // ========== common stages ==========
 const projectTemperaturesStage = {
     $project: {
@@ -33,38 +35,38 @@ const projectTemperaturesStage = {
     },
 };
 // =========== summary ==============
-const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
+// FIXME: below 2 methods are simply incorrect - there is no 'data' field in document collection
 exports.getWeatherForToday = async function () {
     const currentDate = new Date().toISOString()/*.slice(0, 10)*/;
     const result = await DailyTemperature.findOne({data: currentDate});
-    console.log(`weather for ${currentDate}: ${result}`);
+    logger.debug(`weather for ${currentDate}: ${result}`);
     return result;
 
 }
 exports.getWeatherAtDay = async function (day) {
     const result = await DailyTemperature.findOne({data: new Date(day)});
-    console.log(`weather for ${day}: ${result}`);
+    logger.debug(`weather for ${day}: ${result}`);
     return result;
 
 }
 exports.getWeatherDayInRange_ = async function (day, years) {
     const date = new Date(day);
     const dayMonth = '-' + String((date.getMonth() + 1)).padStart(2, 0) + '-' + String(date.getDate()).padStart(2, '0');
-    console.log(`dayMonth = ${dayMonth}`);
+    logger.debug(`dayMonth = ${dayMonth}`);
     const result = await DailyTemperature.find({date: {$regex: dayMonth}})
         .sort({"date": 1})
         .limit(years || Number.MAX_SAFE_INTEGER);
-    console.log(`weather for ${day} in ${years | 13} years: ${result}`);
+    logger.debug(`weather for ${day} in ${years | 13} years: ${result}`);
     return result;
 
 }
 exports.getWeatherDayInRange = async function (day, years) {
-    console.log(`Request params: day = ${day}, years = ${years}`);
+    logger.debug(`Request params: day = ${day}, years = ${years}`);
     const date = new Date(day);
     const dayMonth = '-' + String((date.getMonth() + 1)).padStart(2, 0) + '-' + String(date.getDate()).padStart(2, '0');
-    console.log(`dayMonth = ${dayMonth}`);
+    logger.debug(`dayMonth = ${dayMonth}`);
 
-    var pipeline = [
+    const pipeline = [
         {
             $project: {
                 _id: 0,
@@ -90,12 +92,12 @@ exports.getWeatherDayInRange = async function (day, years) {
         {$limit: +years || Number.MAX_SAFE_INTEGER}
     ];
     const result = await DailyTemperature.aggregate(pipeline);
-    console.log(`weather for ${day} in ${years | 13} years: ${JSON.stringify(result)}`);
+    logger.debug(`weather for ${day} in ${years | 13} years: ${JSON.stringify(result)}`);
     return result;
 
 }
 exports.getYearsToShow = async function () {
-    console.log('getYearsToShow');
+    logger.debug('getYearsToShow');
 
     var pipeline = [
         // {
@@ -160,7 +162,7 @@ exports.getYearsToShow = async function () {
         },
     ];
     const result = await DailyTemperature.aggregate(pipelineLocal);
-    console.log('weather for ' + JSON.stringify(result) + ' years');
+    logger.debug('weather for ' + JSON.stringify(result) + ' years');
     return result[0].maxYear - result[0].minYear + 1;
 
 }
@@ -285,7 +287,7 @@ exports.getYearsBySeasonsTemperature = async function () {
         sortByYearStage
     ];
     const result = await DailyTemperature.aggregate(pipeline);
-    console.log('Seasons temperature ' + JSON.stringify(result) + ' by years');
+    logger.debug('Seasons temperature ' + JSON.stringify(result) + ' by years');
     return result;
 
 }
@@ -359,7 +361,7 @@ exports.getYearsSummary = async function () {
         sortByYearStage
     ];
     const result = await DailyTemperature.aggregate(pipeline);
-    console.log('Temperature ' + JSON.stringify(result) + ' by years');
+    logger.debug('Temperature ' + JSON.stringify(result) + ' by years');
     return result;
 
 
@@ -420,7 +422,7 @@ exports.getYearsByMonthsTemperature = async function () {
     ];
 
     const result = await DailyTemperature.aggregate(pipeline);
-    console.log('Months temperature ' + JSON.stringify(result) + ' by years');
+    logger.debug('Months temperature ' + JSON.stringify(result) + ' by years');
     return result;
 }
 

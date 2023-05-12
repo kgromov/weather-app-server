@@ -1,0 +1,5 @@
+{
+  "cors" : {
+    "origin": "https://weather-odessa-app.vercel.app"
+  }
+}

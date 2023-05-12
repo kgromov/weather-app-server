@@ -1,9 +1,10 @@
+const logger = require('./../startup/logging');
 const http = require('http');
 const https = require('https');
 const URL = require('url');
 
 exports.get = function(url) {
-    console.log('GET by url = ', url);
+    logger.debug(`GET by url = ${url}`);
     return new Promise((resolve, reject) => {
         let client = http;
         // const urlInfo = URL.parse(url, true);
