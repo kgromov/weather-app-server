@@ -25,12 +25,13 @@ exports.syncForToday = async function () {
             .map(date => date.toISOString().slice(0, 10))
         : [currentDate.toISOString().slice(0, 10)];
     console.log('syncDates = ', syncDates, '; length = ', syncDates.length);
-    syncDates.forEach(async syncDate => {
+    await syncDates.forEach(async syncDate => {
         const temperatureMeasurements = await syncSinceDate(syncDate);
         console.log('temperatureMeasurementsDto = ', temperatureMeasurements);
         const record = await new DailyTemperature({...temperatureMeasurements}).save();
         console.log('Saved new daily temperature = ', record);
     });
+    console.log(`Sync since ${currentDate} for ${daysDiff} is finished`);
 }
 
 async function syncSinceDate(date) {
