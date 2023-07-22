@@ -25,12 +25,23 @@ exports.syncForToday = async function () {
             .map(date => date.toISOString().slice(0, 10))
         : [currentDate.toISOString().slice(0, 10)];
     console.log('syncDates = ', syncDates, '; length = ', syncDates.length);
-    await syncDates.forEach(async syncDate => {
+  /*  await syncDates.forEach(async syncDate => {
         const temperatureMeasurements = await syncSinceDate(syncDate);
         console.log('temperatureMeasurementsDto = ', temperatureMeasurements);
         const record = await new DailyTemperature({...temperatureMeasurements}).save();
         console.log('Saved new daily temperature = ', record);
-    });
+    });*/
+    Promise.all(syncDates.map(syncDate => syncSinceDate(syncDate)))
+        .then(temps =>  {
+            const dailyTemperatures = temps.filter(dailyTemp =>
+                !!dailyTemp.morningTemperature && !!dailyTemp.afternoonTemperature
+                && !!dailyTemp.eveningTemperature && !!dailyTemp.nightTemperature
+            ).map(dailyTemp => new DailyTemperature({...dailyTemp}));
+            console.info(`DailyTemperatures model data to insert = ${JSON.stringify(dailyTemperatures)}`);
+            DailyTemperature.insertMany(dailyTemperatures);
+        })
+        // .then(dailyTemperatures => DailyTemperature.insertMany(dailyTemperatures))
+        .catch(err => console.error('Unable to save records  due to: ', err));
     console.log(`Sync since ${currentDate} for ${daysDiff} is finished`);
 }
 
@@ -49,12 +60,12 @@ function extractDailyTemperature(date, weatherContent) {
 
     const measurements = [...Array(timeCells.length).keys()]
         .map(i => {
-            console.log(i, ': [text] time element: ', timeCells[i].text, ', temperature element = ', temperatureCells[i].text);
+            // console.trace(i, ': [text] time element: ', timeCells[i].text, ', temperature element = ', temperatureCells[i].text);
             let time = timeCells[i].text;
             time = Number.parseInt(time.slice(0, time.indexOf(':')).trim());
             let temperature = Number.parseInt(temperatureCells[i].text.trim());
             return new WeatherMeasurementDto(time, temperature);
         });
-    console.log('Daily measurements = ', measurements);
+    console.trace('Daily measurements = ', measurements);
     return new TemperatureMeasurementsDto(new Date(date), measurements);
 }
