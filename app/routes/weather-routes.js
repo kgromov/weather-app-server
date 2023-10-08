@@ -7,8 +7,13 @@ router.get("/years", async (req, res) => {
     res.status(200).json(yearsToShow);
 });
 
-router.get("/seasonsInYear", async (req, res) => {
+router.get("/seasons", async (req, res) => {
     const seasonsWeather = await weatherService.getYearsBySeasonsTemperature()
+    res.status(200).json(seasonsWeather);
+});
+
+app.get("/weather/month", async (req, res) => {
+    const seasonsWeather = await weatherService.getYearsByMonthTemperature()
     res.status(200).json(seasonsWeather);
 });
 

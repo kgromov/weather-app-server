@@ -35,8 +35,13 @@ app.get("/weather/years", async (req, res) => {
     res.status(200).json(yearsToShow);
 });
 
-app.get("/weather/seasonsInYear", async (req, res) => {
+app.get("/weather/seasons", async (req, res) => {
     const seasonsWeather = await weatherService.getYearsBySeasonsTemperature()
+    res.status(200).json(seasonsWeather);
+});
+
+app.get("/weather/months", async (req, res) => {
+    const seasonsWeather = await weatherService.getYearsByMonthsTemperature()
     res.status(200).json(seasonsWeather);
 });
 

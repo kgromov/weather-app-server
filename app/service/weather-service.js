@@ -164,6 +164,7 @@ exports.getYearsToShow = async function () {
     return result[0].maxYear - result[0].minYear + 1;
 
 }
+
 exports.getYearsBySeasonsTemperature = async function () {
     const projectSeasonStage = {
         $addFields: {
@@ -289,6 +290,7 @@ exports.getYearsBySeasonsTemperature = async function () {
     return result;
 
 }
+
 exports.getYearsSummary = async function () {
 
     const projectTemperaturesStage = {
@@ -364,6 +366,7 @@ exports.getYearsSummary = async function () {
 
 
 }
+
 exports.getYearsByMonthsTemperature = async function () {
     const groupBuMonthAndYearStage = {
         $group: {
