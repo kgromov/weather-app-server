@@ -4,6 +4,7 @@ const temperatureSchema = new mongoose.Schema({
     date: {
         type: Date,
         required: true,
+        unique: true
     },
     morningTemperature: Number,
     afternoonTemperature: Number,
