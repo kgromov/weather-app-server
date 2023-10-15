@@ -12,25 +12,22 @@ exports.syncForToday = async function () {
         // .select('date')
         .limit(1);
     const currentDate = new Date();
+    const endDate = currentDate.getUTCHours() < 20 ? DateUtils.addDays(currentDate, -1) : currentDate;
     const latestDate = new Date(latestDayTemperature["0"].date);
-    console.log('Sync date in range [', latestDate, '; ', currentDate, ']');
-    const daysDiff = DateUtils.getDatesDiffInDays(latestDate, currentDate);
+    console.log('Sync date in range [', latestDate, '; ', endDate, ']');
+    const daysDiff = DateUtils.getDatesDiffInDays(latestDate, endDate);
     console.log('Calculated days diff = ', daysDiff);
-    if (daysDiff === 0) {
+    if (daysDiff <= 0) {
+        console.log(`Up to date ${latestDate}`);
         return;
     }
     const syncDates = daysDiff > 1
-        ? [...Array(daysDiff).keys()].map(i => i + 1)
+        ? [...Array(daysDiff).keys()]
+            .map(i => i + 1)
             .map(day => DateUtils.addDays(latestDate, day))
             .map(date => date.toISOString().slice(0, 10))
-        : [currentDate.toISOString().slice(0, 10)];
+        : [endDate.toISOString().slice(0, 10)];
     console.log('syncDates = ', syncDates, '; length = ', syncDates.length);
-  /*  await syncDates.forEach(async syncDate => {
-        const temperatureMeasurements = await syncSinceDate(syncDate);
-        console.log('temperatureMeasurementsDto = ', temperatureMeasurements);
-        const record = await new DailyTemperature({...temperatureMeasurements}).save();
-        console.log('Saved new daily temperature = ', record);
-    });*/
     Promise.all(syncDates.map(syncDate => syncSinceDate(syncDate)))
         .then(temps =>  {
             const dailyTemperatures = temps.filter(dailyTemp =>
@@ -40,9 +37,8 @@ exports.syncForToday = async function () {
             console.info(`DailyTemperatures model data to insert = ${JSON.stringify(dailyTemperatures)}`);
             DailyTemperature.insertMany(dailyTemperatures);
         })
-        // .then(dailyTemperatures => DailyTemperature.insertMany(dailyTemperatures))
         .catch(err => console.error('Unable to save records  due to: ', err));
-    console.log(`Sync since ${currentDate} for ${daysDiff} is finished`);
+    console.log(`Sync since ${latestDate} for ${daysDiff} is finished`);
 }
 
 async function syncSinceDate(date) {
