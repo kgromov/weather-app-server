@@ -5,6 +5,8 @@ const DateUtils = require("./date-utils");
 const dto = require('../model/dto');
 const WeatherMeasurementDto = dto.WeatherMeasurementDto;
 const TemperatureMeasurementsDto = dto.TemperatureMeasurementsDto;
+const StatusCode = dto.StatusCode;
+const SyncStatus = dto.SyncStatus;
 
 exports.syncForToday = async function () {
     const latestDayTemperature = await DailyTemperature.find()
@@ -19,26 +21,31 @@ exports.syncForToday = async function () {
     console.log('Calculated days diff = ', daysDiff);
     if (daysDiff <= 0) {
         console.log(`Up to date ${latestDate}`);
-        return;
+        return new SyncStatus(StatusCode.SUCCESS, `Up to date ${DateUtils.formatToISODate(latestDate)}`);
     }
     const syncDates = daysDiff > 1
         ? [...Array(daysDiff).keys()]
             .map(i => i + 1)
             .map(day => DateUtils.addDays(latestDate, day))
-            .map(date => date.toISOString().slice(0, 10))
-        : [endDate.toISOString().slice(0, 10)];
+            .map(date => DateUtils.formatToISODate(date))
+        : [DateUtils.formatToISODate(endDate)];
     console.log('syncDates = ', syncDates, '; length = ', syncDates.length);
-    Promise.all(syncDates.map(syncDate => syncSinceDate(syncDate)))
-        .then(temps =>  {
+    return Promise.all(syncDates.map(syncDate => syncSinceDate(syncDate)))
+        .then(async temps =>  {
             const dailyTemperatures = temps.filter(dailyTemp =>
                 !!dailyTemp.morningTemperature && !!dailyTemp.afternoonTemperature
                 && !!dailyTemp.eveningTemperature && !!dailyTemp.nightTemperature
             ).map(dailyTemp => new DailyTemperature({...dailyTemp}));
             console.info(`DailyTemperatures model data to insert = ${JSON.stringify(dailyTemperatures)}`);
-            DailyTemperature.insertMany(dailyTemperatures);
+            await DailyTemperature.insertMany(dailyTemperatures);
+            console.log(`Sync since since ${syncDates[0]} to ${syncDates[daysDiff - 1]} is finished`);
+            return new SyncStatus(StatusCode.SUCCESS,
+                `Sync successfully since ${syncDates[0]} to ${syncDates[daysDiff - 1]}`);
         })
-        .catch(err => console.error('Unable to save records  due to: ', err));
-    console.log(`Sync since ${latestDate} for ${daysDiff} is finished`);
+        .catch(err => {
+            console.error('Unable to save records  due to: ', err);
+            return new SyncStatus(StatusCode.FAILURE, `Unable to save records  due to:  ${err}`);
+        });
 }
 
 async function syncSinceDate(date) {

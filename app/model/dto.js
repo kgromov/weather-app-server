@@ -23,3 +23,18 @@ exports.TemperatureMeasurementsDto = class {
         return average;
     }
 }
+
+
+const StatusCode = {
+    SUCCESS: 200,
+    FAILURE: 400
+}
+
+exports.SyncStatus = class {
+    constructor(code, message) {
+        this.code = code;
+        this.message = message;
+    }
+}
+
+exports.StatusCode = StatusCode;

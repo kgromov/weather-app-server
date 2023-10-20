@@ -21,13 +21,14 @@ app.use(express.json())
 app.use(cors(corsOptions));
 
 // establish connection
+mongoose.set('strictQuery', true);
 mongoose.connect(dbConfig.uri, {useNewUrlParser: true, useUnifiedTopology: true})
-    .then(() => console.log('Successfully connected to MongoDB at ...'))
-    .catch(e => console.error('Failed connected to MongoDB...', e));
+    .then(() => console.log('Successfully connected to MongoDB ...'))
+    .catch(e => console.error('Failed connected to MongoDB ...', e));
 
 app.get("/sync", async (req, res) => {
-    await temperatureService.syncForToday();
-    res.status(200).json('Sync is finished');
+    const syncStatus = await temperatureService.syncForToday();
+    res.status(syncStatus.code).json(`Sync is finished: ${syncStatus.message}`);
 });
 
 app.get("/weather/years", async (req, res) => {
