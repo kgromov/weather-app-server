@@ -28,7 +28,12 @@ mongoose.connect(dbConfig.uri, {useNewUrlParser: true, useUnifiedTopology: true}
 
 app.get("/sync", async (req, res) => {
     const syncStatus = await temperatureService.syncForToday();
-    res.status(syncStatus.code).json(`Sync is finished: ${syncStatus.message}`);
+    res.status(syncStatus.code).json(syncStatus);
+});
+
+app.get("/isSynced", async (req, res) => {
+    const isSynced = await temperatureService.isUpToDate();
+    res.status(200).json(isSynced);
 });
 
 app.get("/weather/years", async (req, res) => {

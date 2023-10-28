@@ -8,6 +8,20 @@ const TemperatureMeasurementsDto = dto.TemperatureMeasurementsDto;
 const StatusCode = dto.StatusCode;
 const SyncStatus = dto.SyncStatus;
 
+exports.isUpToDate = async function() {
+    const latestDayTemperature = await DailyTemperature.find()
+        .sort({"date": -1})
+        // .select('date')
+        .limit(1);
+    const currentDate = new Date();
+    const endDate = currentDate.getUTCHours() < 20 ? DateUtils.addDays(currentDate, -1) : currentDate;
+    const latestDate = new Date(latestDayTemperature["0"].date);
+    console.log('Sync date in range [', latestDate, '; ', endDate, ']');
+    const daysDiff = DateUtils.getDatesDiffInDays(latestDate, endDate);
+    console.log('Calculated days diff = ', daysDiff);
+    return daysDiff <= 0;
+}
+
 exports.syncForToday = async function () {
     const latestDayTemperature = await DailyTemperature.find()
         .sort({"date": -1})
@@ -21,7 +35,7 @@ exports.syncForToday = async function () {
     console.log('Calculated days diff = ', daysDiff);
     if (daysDiff <= 0) {
         console.log(`Up to date ${latestDate}`);
-        return new SyncStatus(StatusCode.SUCCESS, `Up to date ${DateUtils.formatToISODate(latestDate)}`);
+        return new SyncStatus(StatusCode.SUCCESS, `Sync succeed: Up to date ${DateUtils.formatToISODate(latestDate)}`);
     }
     const syncDates = daysDiff > 1
         ? [...Array(daysDiff).keys()]
@@ -40,11 +54,11 @@ exports.syncForToday = async function () {
             await DailyTemperature.insertMany(dailyTemperatures);
             console.log(`Sync since since ${syncDates[0]} to ${syncDates[daysDiff - 1]} is finished`);
             return new SyncStatus(StatusCode.SUCCESS,
-                `Sync successfully since ${syncDates[0]} to ${syncDates[daysDiff - 1]}`);
+                `Sync succeed: since ${syncDates[0]} to ${syncDates[daysDiff - 1]}`);
         })
         .catch(err => {
             console.error('Unable to save records  due to: ', err);
-            return new SyncStatus(StatusCode.FAILURE, `Unable to save records  due to:  ${err}`);
+            return new SyncStatus(StatusCode.FAILURE, `Sync failed: Unable to save records  due to:  ${err}`);
         });
 }
 
