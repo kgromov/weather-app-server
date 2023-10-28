@@ -8,6 +8,20 @@ const TemperatureMeasurementsDto = dto.TemperatureMeasurementsDto;
 const StatusCode = dto.StatusCode;
 const SyncStatus = dto.SyncStatus;
 
+exports.isUpToDate = async function() {
+    const latestDayTemperature = await DailyTemperature.find()
+        .sort({"date": -1})
+        // .select('date')
+        .limit(1);
+    const currentDate = new Date();
+    const endDate = currentDate.getUTCHours() < 20 ? DateUtils.addDays(currentDate, -1) : currentDate;
+    const latestDate = new Date(latestDayTemperature["0"].date);
+    console.log('Sync date in range [', latestDate, '; ', endDate, ']');
+    const daysDiff = DateUtils.getDatesDiffInDays(latestDate, endDate);
+    console.log('Calculated days diff = ', daysDiff);
+    return daysDiff <= 0;
+}
+
 exports.syncForToday = async function () {
     const latestDayTemperature = await DailyTemperature.find()
         .sort({"date": -1})
