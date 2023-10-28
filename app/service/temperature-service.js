@@ -21,7 +21,7 @@ exports.syncForToday = async function () {
     console.log('Calculated days diff = ', daysDiff);
     if (daysDiff <= 0) {
         console.log(`Up to date ${latestDate}`);
-        return new SyncStatus(StatusCode.SUCCESS, `Up to date ${DateUtils.formatToISODate(latestDate)}`);
+        return new SyncStatus(StatusCode.SUCCESS, `Sync succeed: Up to date ${DateUtils.formatToISODate(latestDate)}`);
     }
     const syncDates = daysDiff > 1
         ? [...Array(daysDiff).keys()]
@@ -40,11 +40,11 @@ exports.syncForToday = async function () {
             await DailyTemperature.insertMany(dailyTemperatures);
             console.log(`Sync since since ${syncDates[0]} to ${syncDates[daysDiff - 1]} is finished`);
             return new SyncStatus(StatusCode.SUCCESS,
-                `Sync successfully since ${syncDates[0]} to ${syncDates[daysDiff - 1]}`);
+                `Sync succeed: since ${syncDates[0]} to ${syncDates[daysDiff - 1]}`);
         })
         .catch(err => {
             console.error('Unable to save records  due to: ', err);
-            return new SyncStatus(StatusCode.FAILURE, `Unable to save records  due to:  ${err}`);
+            return new SyncStatus(StatusCode.FAILURE, `Sync failed: Unable to save records  due to:  ${err}`);
         });
 }
 

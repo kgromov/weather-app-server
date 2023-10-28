@@ -10,9 +10,9 @@ const temperatureService = require("./app/service/temperature-service");
 const app = express();
 const originUri = process.env.CORS_ORIGIN || 'http://localhost:4200';
 const corsOptions = {
-    // origin: `${originUri}`
+    origin: `${originUri}`
     // origin: '*'
-    origin: 'https://weather-odessa-app.vercel.app'
+    // origin: 'https://weather-odessa-app.vercel.app'
 };
 console.log('CORS_ORIGIN = ', process.env.CORS_ORIGIN);
 console.log('cors options = ', corsOptions);
@@ -23,12 +23,12 @@ app.use(cors(corsOptions));
 // establish connection
 mongoose.set('strictQuery', true);
 mongoose.connect(dbConfig.uri, {useNewUrlParser: true, useUnifiedTopology: true})
-    .then(() => console.log('Successfully connected to MongoDB ...'))
+    .then(() => console.log('Successfully connected to MongoDB ...', dbConfig.uri))
     .catch(e => console.error('Failed connected to MongoDB ...', e));
 
 app.get("/sync", async (req, res) => {
     const syncStatus = await temperatureService.syncForToday();
-    res.status(syncStatus.code).json(`Sync is finished: ${syncStatus.message}`);
+    res.status(syncStatus.code).json(syncStatus);
 });
 
 app.get("/weather/years", async (req, res) => {
