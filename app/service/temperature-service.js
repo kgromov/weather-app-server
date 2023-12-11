@@ -8,7 +8,7 @@ const TemperatureMeasurementsDto = dto.TemperatureMeasurementsDto;
 const StatusCode = dto.StatusCode;
 const SyncStatus = dto.SyncStatus;
 
-exports.isUpToDate = async function() {
+exports.isUpToDate = async function () {
     const latestDayTemperature = await DailyTemperature.find()
         .sort({"date": -1})
         // .select('date')
@@ -44,21 +44,23 @@ exports.syncForToday = async function () {
             .map(date => DateUtils.formatToISODate(date))
         : [DateUtils.formatToISODate(endDate)];
     console.log('syncDates = ', syncDates, '; length = ', syncDates.length);
-    const temps = await Promise.all(syncDates.map(syncDate => syncSinceDatePromise(syncDate)));
-    const dailyTemperatures = temps.filter(dailyTemp =>
-        !!dailyTemp.morningTemperature && !!dailyTemp.afternoonTemperature
-        && !!dailyTemp.eveningTemperature && !!dailyTemp.nightTemperature
-    ).map(dailyTemp => new DailyTemperature({...dailyTemp}));
-    console.info(`DailyTemperatures model data to insert = ${JSON.stringify(dailyTemperatures)}`);
-    try {
-        await DailyTemperature.insertMany(dailyTemperatures)
-        console.log(`Sync since since ${syncDates[0]} to ${syncDates[daysDiff - 1]} is finished`);
-        return new SyncStatus(StatusCode.SUCCESS,
-            `Sync succeed: since ${syncDates[0]} to ${syncDates[daysDiff - 1]}`);
-    } catch(err) {
-        console.error('Unable to save records  due to: ', err);
-        return new SyncStatus(StatusCode.FAILURE, `Sync failed: Unable to save records  due to:  ${err}`);
-    }
+    return Promise.all(syncDates.map(syncDate => syncSinceDatePromise(syncDate)))
+        .then(temps => {
+            console.log(`Extracted dailies temperature: ${JSON.stringify(temps)}`);
+            return temps.filter(dailyTemp =>
+                dailyTemp.morningTemperature !== undefined && dailyTemp.afternoonTemperature !== undefined
+                && dailyTemp.eveningTemperature !== undefined && dailyTemp.nightTemperature !== undefined
+            ).map(dailyTemp => new DailyTemperature({...dailyTemp}));
+        }).then(dailyTemperatures => {
+            console.info(`DailyTemperatures model data to insert = ${JSON.stringify(dailyTemperatures)}`);
+            DailyTemperature.insertMany(dailyTemperatures);
+        }).then(() => {
+            console.log(`Sync since since ${syncDates[0]} to ${syncDates[daysDiff - 1]} is finished`);
+            return new SyncStatus(StatusCode.SUCCESS, `Sync succeed: since ${syncDates[0]} to ${syncDates[daysDiff - 1]}`);
+        }).catch(err => {
+            console.error('Unable to save records  due to: ', err);
+            return new SyncStatus(StatusCode.FAILURE, `Sync failed: Unable to save records  due to:  ${err}`);
+        })
 }
 
 function syncSinceDatePromise(date) {
@@ -82,6 +84,6 @@ function extractDailyTemperature(date, weatherContent) {
             let temperature = Number.parseInt(temperatureCells[i].text.trim());
             return new WeatherMeasurementDto(time, temperature);
         });
-    console.trace('Daily measurements = ', measurements);
+    console.trace('Daily measurements [', date, '] = ', measurements);
     return new TemperatureMeasurementsDto(new Date(date), measurements);
 }
