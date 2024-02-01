@@ -45,19 +45,8 @@ exports.getWeatherAtDay = async function (day) {
     const result = await DailyTemperature.findOne({data: new Date(day)});
     console.log(`weather for ${day}: ${result}`);
     return result;
-
 }
-exports.getWeatherDayInRange_ = async function (day, years) {
-    const date = new Date(day);
-    const dayMonth = '-' + String((date.getMonth() + 1)).padStart(2, 0) + '-' + String(date.getDate()).padStart(2, '0');
-    console.log(`dayMonth = ${dayMonth}`);
-    const result = await DailyTemperature.find({date: {$regex: dayMonth}})
-        .sort({"date": 1})
-        .limit(years || Number.MAX_SAFE_INTEGER);
-    console.log(`weather for ${day} in ${years | 13} years: ${result}`);
-    return result;
 
-}
 exports.getWeatherDayInRange = async function (day, years) {
     console.log(`Request params: day = ${day}, years = ${years}`);
     const date = new Date(day);
@@ -86,7 +75,7 @@ exports.getWeatherDayInRange = async function (day, years) {
                 date: {$regex: dayMonth}
             }
         },
-        {$sort: {date: 1}},
+        {$sort: {date: -1}},
         {$limit: +years || Number.MAX_SAFE_INTEGER}
     ];
     const result = await DailyTemperature.aggregate(pipeline);
