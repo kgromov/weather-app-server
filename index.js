@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const cron = require("node-cron");
+require('dotenv').config();
 
 const dbConfig = require("./app/config/db-config");
 const weatherService = require('./app/service/weather-service');
@@ -10,9 +11,7 @@ const temperatureService = require("./app/service/temperature-service");
 const app = express();
 const originUri = process.env.CORS_ORIGIN || 'http://localhost:4200';
 const corsOptions = {
-    // origin: `${originUri}`
-    // origin: '*'
-    origin: 'https://weather-odessa-app.vercel.app'
+    origin: `${originUri}`
 };
 console.log('CORS_ORIGIN = ', process.env.CORS_ORIGIN);
 console.log('cors options = ', corsOptions);
