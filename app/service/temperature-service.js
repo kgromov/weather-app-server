@@ -72,9 +72,9 @@ function syncSinceDatePromise(date) {
 
 function extractDailyTemperature(date, weatherContent) {
     const root = HTMLParser.parse(weatherContent);
-    const weatherTable = root.querySelector('table.weatherDetails');
-    const timeCells = weatherTable.querySelectorAll('tbody>tr.gray.time>td');
-    const temperatureCells = weatherTable.querySelectorAll('tbody>tr.temperature>td');
+    const weatherTable = root.querySelector('table.mK1PSQn1');
+    const timeCells = weatherTable.querySelectorAll('thead>tr:nth-child(2)>td');
+    const temperatureCells = weatherTable.querySelectorAll('tbody>tr.wqY8mYtV>td');
 
     const measurements = [...Array(timeCells.length).keys()]
         .map(i => {
