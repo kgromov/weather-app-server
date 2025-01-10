@@ -13,6 +13,7 @@ const projectTemperaturesStage = {
             $min: [
                 "$morningTemperature",
                 "$afternoonTemperature",
+                "$eveningTemperature",
                 "$nightTemperature",
             ],
         },
@@ -20,6 +21,7 @@ const projectTemperaturesStage = {
             $max: [
                 "$morningTemperature",
                 "$afternoonTemperature",
+                "$eveningTemperature",
                 "$nightTemperature",
             ],
         },
@@ -27,6 +29,7 @@ const projectTemperaturesStage = {
             $avg: [
                 "$morningTemperature",
                 "$afternoonTemperature",
+                "$eveningTemperature",
                 "$nightTemperature",
             ],
         },
