@@ -51,7 +51,7 @@ app.get("/api/weather/months", async (req, res) => {
 });
 
 app.get("/api/weather/summary", async (req, res) => {
-    const yearsWeather = await weatherService.getYearsSummary()
+    const yearsWeather = await weatherService.getMaxTemperatureDays()
     res.status(200).json(yearsWeather);
 });
 

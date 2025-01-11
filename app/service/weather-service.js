@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const {SyncStatus, StatusCode} = require("../model/dto");
 // ========== common stages ==========
 const projectTemperaturesStage = {
     $project: {
@@ -90,13 +91,6 @@ exports.getYearsToShow = async function () {
     console.log('getYearsToShow');
 
     var pipeline = [
-        // {
-        //     $project: {
-        //         date: {
-        //             $toDecimal: "$date",
-        //         },
-        //     },
-        // },
         {
             $group: {
                 _id: null,
@@ -283,8 +277,9 @@ exports.getYearsBySeasonsTemperature = async function () {
 
 }
 
-exports.getYearsSummary = async function () {
+exports.getYearsSummary = getYearsSummary
 
+async function getYearsSummary() {
     const projectTemperaturesStage = {
         $project: {
             _id: null,
@@ -355,8 +350,6 @@ exports.getYearsSummary = async function () {
     const result = await DailyTemperature.aggregate(pipeline);
     console.log('Temperature ' + JSON.stringify(result) + ' by years');
     return result;
-
-
 }
 
 exports.getYearsByMonthsTemperature = async function () {
@@ -419,4 +412,51 @@ exports.getYearsByMonthsTemperature = async function () {
     return result;
 }
 
+exports.getMaxTemperatureDays = async function () {
+    let yearsSummary = await getYearsSummary();
+    const maxTempDatesByYear = await fetchDaysExtremumTemperatures(yearsSummary, 'max');
+    const minTempDatesByYear = await fetchDaysExtremumTemperatures(yearsSummary, 'min');
+    yearsSummary = yearsSummary.map(year => (
+        {
+            ...year,
+            maxTempDates: findExtremumTemperatureDates(year, year.max, maxTempDatesByYear),
+            minTempDates: findExtremumTemperatureDates(year, year.min, minTempDatesByYear)
+        }));
+    console.log('Temperature ' + JSON.stringify(yearsSummary) + ' by years');
+    return yearsSummary;
+}
 
+async function fetchDaysExtremumTemperatures(yearsSummary, field) {
+    const temperatures = yearsSummary.map(year => year[field]);
+    console.log(temperatures);
+    const query =  {
+        $or:
+            [
+                {morningTemperature: {$in: temperatures}},
+                {afternoonTemperature: {$in: temperatures}},
+                {eveningTemperature: {$in: temperatures}},
+                {nightTemperature: {$in: temperatures}},
+            ]
+    }
+    const days = await DailyTemperature.find(query).sort({date: 1})
+    console.log(days);
+    const datesByYear = new Map();
+    days.forEach(day => {
+        const year = day.date.getFullYear();
+        if (datesByYear.has(year)) {
+            datesByYear.get(year).push(day);
+        } else {
+            datesByYear.set(year, [day]);
+        }
+    });
+    return datesByYear;
+}
+
+function findExtremumTemperatureDates(yearSummary, temperature, datesByYear) {
+    return datesByYear.get(yearSummary.year)
+        .filter(day => day.morningTemperature === temperature
+            || day.afternoonTemperature === temperature
+            || day.eveningTemperature === temperature
+            || day.nightTemperature === temperature
+        ).map(day => day.date);
+}
