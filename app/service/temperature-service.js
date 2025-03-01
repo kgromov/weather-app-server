@@ -64,7 +64,7 @@ exports.syncForToday = async function () {
 }
 
 function syncSinceDatePromise(date) {
-    const url = 'https://sinoptik.ua/погода-одесса/' + date;
+    const url = 'https://sinoptik.ua/en/pohoda/odesa/' + date;
     const encodedUrl = encodeURI(url);
     return http.get(encodedUrl)
         .then(response => extractDailyTemperature(date, response));
@@ -73,6 +73,9 @@ function syncSinceDatePromise(date) {
 function extractDailyTemperature(date, weatherContent) {
     const root = HTMLParser.parse(weatherContent);
     const weatherTable = root.querySelector('table.mK1PSQn1');
+    if (!weatherTable) {
+        console.warn('Content not found for date = ', date);
+    }
     const timeCells = weatherTable.querySelectorAll('thead>tr:nth-child(2)>td');
     const temperatureCells = weatherTable.querySelectorAll('tbody>tr.wqY8mYtV>td');
 
