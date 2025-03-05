@@ -64,7 +64,7 @@ exports.syncForToday = async function () {
 }
 
 function syncSinceDatePromise(date) {
-    const url = 'https://sinoptik.ua/en/pohoda/odesa/' + date;
+    const url = 'https://sinoptik.ua/ru/pohoda/odesa/' + date;
     const encodedUrl = encodeURI(url);
     return http.get(encodedUrl)
         .then(response => extractDailyTemperature(date, response));
