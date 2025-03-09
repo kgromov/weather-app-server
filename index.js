@@ -5,15 +5,15 @@ const cron = require("node-cron");
 require('dotenv').config();
 
 const dbConfig = require("./app/config/db-config");
+const webConfig = require("./app/config/web-config");
 const weatherService = require('./app/service/weather-service');
 const temperatureService = require("./app/service/temperature-service");
 
 const app = express();
-const originUri = process.env.CORS_ORIGIN || 'http://localhost:4200';
 const corsOptions = {
-    origin: `${originUri}`
+    origin: webConfig.originUri
 };
-console.log('CORS_ORIGIN = ', process.env.CORS_ORIGIN);
+console.debug('CORS_ORIGIN = ', process.env.CORS_ORIGIN);
 console.log('cors options = ', corsOptions);
 
 app.use(express.json())

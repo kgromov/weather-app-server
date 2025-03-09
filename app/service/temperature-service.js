@@ -3,6 +3,7 @@ const http = require('./http-service');
 const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
 const DateUtils = require("./date-utils");
 const dto = require('../model/dto');
+const webConfig = require("../config/web-config");
 const WeatherMeasurementDto = dto.WeatherMeasurementDto;
 const TemperatureMeasurementsDto = dto.TemperatureMeasurementsDto;
 const StatusCode = dto.StatusCode;
@@ -64,7 +65,7 @@ exports.syncForToday = async function () {
 }
 
 function syncSinceDatePromise(date) {
-    const url = 'https://sinoptik.ua/ru/pohoda/odesa/' + date;
+    const url = `${webConfig.weatherURL}/${date}`;
     const encodedUrl = encodeURI(url);
     return http.get(encodedUrl)
         .then(response => extractDailyTemperature(date, response));
