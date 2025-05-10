@@ -77,7 +77,7 @@ app.get("/api/weather/:day", async (req, res) => {
 
 const port = process.env.PORT | 9000;
 app.listen(port, () => {
-    console.log(`Server is started on port ${port}`);
+    console.log(`Server is started on port ${port} on instance ${process.env.APP_NAME}`);
 });
 
 // cron.schedule("*/5 * * * *", async () => {
