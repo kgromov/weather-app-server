@@ -1,0 +1,12 @@
+version: '3.3'
+
+services:
+  weather-db:
+    build: .
+    environment:
+      MONGO_INITDB_ROOT_USERNAME:
+      MONGO_INITDB_ROOT_PASSWORD:
+      MONGO_INITDB_DATABASE: testdb
+    ports:
+      - "20017:27017"
+

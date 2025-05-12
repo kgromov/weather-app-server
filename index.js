@@ -29,6 +29,10 @@ mongoose.connect(dbConfig.uri)
     .then(() => console.log('Successfully connected to MongoDB ...'))
     .catch(e => console.error('Failed connected to MongoDB ...', e));
 
+app.get("/health", (req, res) => {
+    res.status(200).json({status: "OK"});
+});
+
 app.get("/api/sync", async (req, res) => {
     const syncStatus = await temperatureService.syncForToday();
     res.status(syncStatus.code).json(syncStatus);
