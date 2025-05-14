@@ -1,7 +1,8 @@
 version: '3'
 services:
   weather-db:
-    build: ./mongodb
+#    build: ./mongodb
+    image: kgromov/weather-mongodb:v1
     environment:
       MONGO_INITDB_ROOT_USERNAME:
       MONGO_INITDB_ROOT_PASSWORD:
@@ -10,7 +11,8 @@ services:
     ports:
       - "27016:27017"
   app1:
-    build: .
+#    build: .
+    image: kgromov/weather-server:v1
     environment:
       - DB_USER
       - DB_PASSWORD
@@ -23,7 +25,8 @@ services:
     depends_on:
       - weather-db
   app2:
-    build: .
+#    build: .
+    image: kgromov/weather-server:v1
     environment:
       - DB_USER
       - DB_PASSWORD
@@ -36,7 +39,8 @@ services:
     depends_on:
       - weather-db
   app3:
-    build: .
+#    build: .
+    image: kgromov/weather-server:v1
     environment:
       - DB_USER
       - DB_PASSWORD
