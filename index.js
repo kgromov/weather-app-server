@@ -17,6 +17,7 @@ const app = express();
 const corsOptions = {
     origin: webConfig.originUri
 };
+console.debug('profile = ', process.env.NODE_ENV);
 console.debug('CORS_ORIGIN = ', process.env.CORS_ORIGIN);
 console.log('cors options = ', corsOptions);
 
@@ -30,7 +31,7 @@ mongoose.connect(dbConfig.uri)
     .catch(e => console.error('Failed connected to MongoDB ...', e));
 
 app.get("/health", (req, res) => {
-    res.status(200).json({status: "OK"});
+    res.status(200).json({status: "OK", app: `${process.env.APP_NAME}`});
 });
 
 app.get("/api/sync", async (req, res) => {

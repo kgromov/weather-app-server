@@ -6,7 +6,23 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME:
       MONGO_INITDB_ROOT_PASSWORD:
-      MONGO_INITDB_DATABASE: testdb
+      MONGO_INITDB_DATABASE:
+      MONGO_INITDB_COLLECTION:
     ports:
-      - "20017:27017"
+      - "27015:27017"
 
+#  weather-db:
+#    image: mongo:latest
+#    environment:
+#      MONGO_INITDB_ROOT_USERNAME:
+#      MONGO_INITDB_ROOT_PASSWORD:
+#      MONGO_INITDB_DATABASE:
+#    ports:
+#      - "20017:27017"
+#    volumes:
+#      - ./testdata.json:/tmp/testdata.json
+#      - ./importscript.sh:/tmp/importscript.sh
+#    command: bash -c "/tmp/importscript.sh"
+#    command: >
+#      bash -c "mongoimport --db=${MONGO_INITDB_DATABASE} --collection='testdata' --file='/tmp/testdata.json' \
+#      --jsonArray --username=${MONGO_INITDB_ROOT_USERNAME} --password=${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase=admin"

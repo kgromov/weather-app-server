@@ -1,22 +1,50 @@
 version: '3'
 services:
+  weather-db:
+    build: ./mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME:
+      MONGO_INITDB_ROOT_PASSWORD:
+      MONGO_INITDB_DATABASE:
+      MONGO_INITDB_COLLECTION:
+    ports:
+      - "27017:27017"
   app1:
     build: .
     environment:
+      - DB_USER
+      - DB_PASSWORD
+      - NODE_ENV
+      - CORS_ORIGIN
+      - WEATHER_URL
       - APP_NAME=Serve1
     ports:
       - "9001:9000"
-
+    depends_on:
+      - weather-db
   app2:
     build: .
     environment:
+      - DB_USER
+      - DB_PASSWORD
+      - NODE_ENV
+      - CORS_ORIGIN
+      - WEATHER_URL
       - APP_NAME=Serve2
     ports:
       - "9002:9000"
-
+    depends_on:
+      - weather-db
   app3:
     build: .
     environment:
+      - DB_USER
+      - DB_PASSWORD
+      - NODE_ENV
+      - CORS_ORIGIN
+      - WEATHER_URL
       - APP_NAME=Serve3
     ports:
       - "9003:9000"
+    depends_on:
+      - weather-db

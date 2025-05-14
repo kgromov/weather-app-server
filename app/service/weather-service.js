@@ -57,7 +57,7 @@ exports.getWeatherDayInRange = async function (day, years) {
     const dayMonth = '-' + String((date.getMonth() + 1)).padStart(2, 0) + '-' + String(date.getDate()).padStart(2, '0');
     console.log(`dayMonth = ${dayMonth}`);
 
-    var pipeline = [
+    const pipeline = [
         {
             $project: {
                 _id: 0,
@@ -90,7 +90,7 @@ exports.getWeatherDayInRange = async function (day, years) {
 exports.getYearsToShow = async function () {
     console.log('getYearsToShow');
 
-    var pipeline = [
+    const pipeline = [
         {
             $group: {
                 _id: null,
@@ -122,7 +122,7 @@ exports.getYearsToShow = async function () {
         },
     ];
 
-    var pipelineLocal = [
+    const pipelineLocal = [
         {
             $group: {
                 _id: null,
