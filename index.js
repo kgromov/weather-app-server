@@ -55,7 +55,7 @@ app.get("/api/weather/months", async (req, res) => {
 });
 
 app.get("/api/weather/month/:year/:month", async (req, res) => {
-    const monthWeather = await weatherService.getMonthWeather(req.params.year, req.query.month);
+    const monthWeather = await weatherService.getMonthWeather(req.params.year, req.params.month);
     res.status(200).json(monthWeather);
 });
 

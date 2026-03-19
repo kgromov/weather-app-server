@@ -37,6 +37,7 @@ const projectTemperaturesStage = {
 };
 // =========== summary ==============
 const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
+
 exports.getWeatherForToday = async function () {
     const currentDate = new Date().toISOString()/*.slice(0, 10)*/;
     const result = await DailyTemperature.findOne({data: currentDate});
@@ -73,20 +74,21 @@ exports.getMonthWeatherPlain = async function (month, year) {
             nightTemperature: 1
         }
     ).sort({ date: 1 });
-    console.log(`weather for ${to.toLocaleString('default', { month: 'long' })}, ${year}: ${JSON.stringify(result)}`);
+    console.log(`weather for ${from.toLocaleString('default', { month: 'long' })}, ${year}: ${JSON.stringify(result)}`);
     return result;
 }
 
 exports.getMonthWeather = async function (year, month) {
-    console.log(`Request params: month = ${month}, year = ${year}`);
-    const from = new Date(year, month - 1, 1);
-    const to   = new Date(year, month, 1);
+    console.log(`getMonthWeather: request params: month = ${month}, year = ${year}`);
+    const from = new Date(Date.UTC(year, month - 1, 1));
+    const to   = new Date(Date.UTC(year, month,     1));
+
     const pipeline = [
         {
             $match: {
                 date: {
-                    $gte: new ISODate("2025-01-01"),
-                    $lt: new ISODate("2025-02-01")
+                    $gte: from,
+                    $lt: to
                 }
             }
         },
@@ -94,39 +96,9 @@ exports.getMonthWeather = async function (year, month) {
             $project: {
                 _id: 0,
                 day: { $dayOfMonth: "$date" },
-                date: 1,
-                minTemp: {
-                    $min: [
-                        "$morningTemperature",
-                        "$afternoonTemperature",
-                        "$eveningTemperature",
-                        "$nightTemperature"
-                    ]
-                },
-                maxTemp: {
-                    $max: [
-                        "$morningTemperature",
-                        "$afternoonTemperature",
-                        "$eveningTemperature",
-                        "$nightTemperature"
-                    ]
-                },
-                avgTemp: {
-                    $avg: [
-                        "$morningTemperature",
-                        "$afternoonTemperature",
-                        "$eveningTemperature",
-                        "$nightTemperature"
-                    ]
-                }
-            }
-        },
-        {
-            $project: {
-                day: 1,
-                maxTemp: 1,
-                minTemp: 1,
-                avgTemp: 1
+                minTemp: { $min: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"] },
+                maxTemp: { $max: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"] },
+                avgTemp: { $avg: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"] }
             }
         },
         {
@@ -134,7 +106,7 @@ exports.getMonthWeather = async function (year, month) {
         }
     ];
     const result = await DailyTemperature.aggregate(pipeline);
-    console.log(`weather for ${to.toLocaleString('default', { month: 'long' })}, ${year}: ${JSON.stringify(result)}`);
+    console.log(`weather for ${from.toLocaleString('default', { month: 'long' })}, ${year}: ${JSON.stringify(result)}`);
     return result;
 }
 
