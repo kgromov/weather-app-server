@@ -26,12 +26,10 @@ const projectTemperaturesStage = {
             ],
         },
         avgTemp: {
-            $avg: [
-                "$morningTemperature",
-                "$afternoonTemperature",
-                "$eveningTemperature",
-                "$nightTemperature",
-            ],
+            $round: [
+                { $avg: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"] },
+                2
+            ]
         },
     },
 };
@@ -101,7 +99,12 @@ exports.getMonthWeather = async function (y, m) {
                 day: {$dayOfMonth: "$date"},
                 minTemp: {$min: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"]},
                 maxTemp: {$max: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"]},
-                avgTemp: {$avg: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"]}
+                avgTemp: {
+                    $round: [
+                        { $avg: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"] },
+                        2
+                    ]
+                }
             }
         },
         {
@@ -367,11 +370,9 @@ async function getYearsSummary() {
                 ]
             },
             avgTemp: {
-                $avg: [
-                    "$morningTemperature",
-                    "$afternoonTemperature",
-                    "$eveningTemperature",
-                    "$nightTemperature",
+                $round: [
+                    { $avg: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"] },
+                    2
                 ]
             }
         }
