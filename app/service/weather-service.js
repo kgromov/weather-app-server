@@ -108,7 +108,7 @@ exports.getMonthWeather = async function (y, m) {
             $sort: {day: 1}
         }
     ];
-    console.log(`${JSON.stringify(pipeline, null, 2)}`);
+    console.trace(`${JSON.stringify(pipeline, null, 2)}`);
     const result = await DailyTemperature.aggregate(pipeline);
     console.log(`weather for ${from.toLocaleString('default', {month: 'long'})}, ${year}: ${JSON.stringify(result)}`);
     return result;
@@ -145,6 +145,7 @@ exports.getWeatherDayInRange = async function (day, years) {
         {$sort: {date: -1}},
         {$limit: +years || Number.MAX_SAFE_INTEGER}
     ];
+    console.log(`${JSON.stringify(pipeline, null, 2)}`);
     const result = await DailyTemperature.aggregate(pipeline);
     console.log(`weather for ${day} in ${years | 13} years: ${JSON.stringify(result)}`);
     return result;
