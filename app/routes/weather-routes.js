@@ -13,8 +13,13 @@ router.get("/api/seasons", async (req, res) => {
 });
 
 app.get("/api/weather/month", async (req, res) => {
-    const seasonsWeather = await weatherService.getYearsByMonthTemperature()
-    res.status(200).json(seasonsWeather);
+    const yearMonthSummary = await weatherService.getYearsByMonthsTemperature()
+    res.status(200).json(yearMonthSummary);
+});
+
+router.get("/api/weather/month/:year/:month", async (req, res) => {
+    const monthWeather = await weatherService.getMonthWeather(req.params.year, req.query.month);
+    res.status(200).json(monthWeather);
 });
 
 router.get("/api/summary", async (req, res) => {

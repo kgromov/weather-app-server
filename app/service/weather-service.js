@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const {SyncStatus, StatusCode} = require("../model/dto");
 // ========== common stages ==========
 const projectTemperaturesStage = {
     $project: {
@@ -38,6 +37,7 @@ const projectTemperaturesStage = {
 };
 // =========== summary ==============
 const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
+
 exports.getWeatherForToday = async function () {
     const currentDate = new Date().toISOString()/*.slice(0, 10)*/;
     const result = await DailyTemperature.findOne({data: currentDate});
@@ -51,13 +51,76 @@ exports.getWeatherAtDay = async function (day) {
     return result;
 }
 
+exports.getMonthWeatherPlain = async function (month, year) {
+    console.log(`Request params: month = ${month}, year = ${year}`);
+    const from = new Date(year, month - 1, 1);
+    const to = new Date(year, month, 1);
+    const result = await DailyTemperature.find(
+        {
+            date: {$gte: from, $lt: to}
+        },
+        {
+            _id: 0,
+            day: {
+                $dateToString: {
+                    date: "$date",
+                    format: "%d",
+                }
+            },
+            date: 1,
+            morningTemperature: 1,
+            afternoonTemperature: 1,
+            eveningTemperature: 1,
+            nightTemperature: 1
+        }
+    ).sort({date: 1});
+    console.log(`weather for ${from.toLocaleString('default', {month: 'long'})}, ${year}: ${JSON.stringify(result)}`);
+    return result;
+}
+
+exports.getMonthWeather = async function (y, m) {
+    const year = parseInt(y, 10);
+    const month = parseInt(m, 10);
+    console.log(`getMonthWeather: request params: month = ${month}, year = ${year}`);
+    const from = new Date(Date.UTC(year, month, 1));
+    const to = new Date(Date.UTC(year, month + 1, 1));
+    console.log(`date range for month: [${from}; ${to}]`);
+
+    const pipeline = [
+        {
+            $match: {
+                date: {
+                    $gte: from,
+                    $lt: to
+                }
+            }
+        },
+        {
+            $project: {
+                _id: 0,
+                day: {$dayOfMonth: "$date"},
+                minTemp: {$min: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"]},
+                maxTemp: {$max: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"]},
+                avgTemp: {$avg: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"]}
+            }
+        },
+        {
+            $sort: {day: 1}
+        }
+    ];
+    console.log(`${JSON.stringify(pipeline, null, 2)}`);
+    const result = await DailyTemperature.aggregate(pipeline);
+    console.log(`weather for ${from.toLocaleString('default', {month: 'long'})}, ${year}: ${JSON.stringify(result)}`);
+    return result;
+}
+
 exports.getWeatherDayInRange = async function (day, years) {
     console.log(`Request params: day = ${day}, years = ${years}`);
     const date = new Date(day);
     const dayMonth = '-' + String((date.getMonth() + 1)).padStart(2, 0) + '-' + String(date.getDate()).padStart(2, '0');
     console.log(`dayMonth = ${dayMonth}`);
 
-    var pipeline = [
+    const pipeline = [
         {
             $project: {
                 _id: 0,
@@ -90,7 +153,7 @@ exports.getWeatherDayInRange = async function (day, years) {
 exports.getYearsToShow = async function () {
     console.log('getYearsToShow');
 
-    var pipeline = [
+    const pipeline = [
         {
             $group: {
                 _id: null,
@@ -122,7 +185,7 @@ exports.getYearsToShow = async function () {
         },
     ];
 
-    var pipelineLocal = [
+    const pipelineLocal = [
         {
             $group: {
                 _id: null,
@@ -290,6 +353,7 @@ async function getYearsSummary() {
                 $min: [
                     "$morningTemperature",
                     "$afternoonTemperature",
+                    "$eveningTemperature",
                     "$nightTemperature",
                 ]
             },
@@ -297,6 +361,7 @@ async function getYearsSummary() {
                 $max: [
                     "$morningTemperature",
                     "$afternoonTemperature",
+                    "$eveningTemperature",
                     "$nightTemperature",
                 ]
             },
@@ -304,6 +369,7 @@ async function getYearsSummary() {
                 $avg: [
                     "$morningTemperature",
                     "$afternoonTemperature",
+                    "$eveningTemperature",
                     "$nightTemperature",
                 ]
             }
@@ -429,7 +495,7 @@ exports.getMaxTemperatureDays = async function () {
 async function fetchDaysExtremumTemperatures(yearsSummary, field) {
     const temperatures = yearsSummary.map(year => year[field]);
     console.log(temperatures);
-    const query =  {
+    const query = {
         $or:
             [
                 {morningTemperature: {$in: temperatures}},
