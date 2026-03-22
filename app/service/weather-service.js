@@ -1,5 +1,19 @@
 const mongoose = require("mongoose");
 // ========== common stages ==========
+const avgTemperaturesStage = {
+    $round: [
+        {
+            $avg: [
+                "$morningTemperature",
+                "$afternoonTemperature",
+                "$eveningTemperature",
+                "$nightTemperature"
+            ]
+        },
+        2
+    ]
+};
+
 const projectTemperaturesStage = {
     $project: {
         _id: null,
@@ -25,12 +39,7 @@ const projectTemperaturesStage = {
                 "$nightTemperature",
             ],
         },
-        avgTemp: {
-            $round: [
-                { $avg: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"] },
-                2
-            ]
-        },
+        avgTemp: avgTemperaturesStage
     },
 };
 // =========== summary ==============
@@ -99,12 +108,7 @@ exports.getMonthWeather = async function (y, m) {
                 day: {$dayOfMonth: "$date"},
                 minTemp: {$min: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"]},
                 maxTemp: {$max: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"]},
-                avgTemp: {
-                    $round: [
-                        { $avg: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"] },
-                        2
-                    ]
-                }
+                avgTemp: avgTemperaturesStage
             }
         },
         {
@@ -369,12 +373,7 @@ async function getYearsSummary() {
                     "$nightTemperature",
                 ]
             },
-            avgTemp: {
-                $round: [
-                    { $avg: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"] },
-                    2
-                ]
-            }
+            avgTemp: avgTemperaturesStage
         }
     };
 
