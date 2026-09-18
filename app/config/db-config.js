@@ -14,7 +14,6 @@ async function connectToDatabase() {
         mongoose.set('strictQuery', true);
         conn = mongoose.connect(uri, {
             serverSelectionTimeoutMS: 5000, // fail fast instead of hanging
-            bufferCommands: false,          // don't silently queue — surface the real error
         }).then(() => mongoose);
     }
     await conn;
