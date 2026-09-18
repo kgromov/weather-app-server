@@ -4,12 +4,15 @@ const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
 const DateUtils = require("./date-utils");
 const dto = require('../model/dto');
 const webConfig = require("../config/web-config");
+const {getDailyTemperatureModel} = require("../model/daily-temperature");
+const mongoose = require("mongoose");
 const WeatherMeasurementDto = dto.WeatherMeasurementDto;
 const TemperatureMeasurementsDto = dto.TemperatureMeasurementsDto;
 const StatusCode = dto.StatusCode;
 const SyncStatus = dto.SyncStatus;
 
 exports.isUpToDate = async function () {
+    const DailyTemperature = await getDailyTemperatureModel();
     const latestDayTemperature = await DailyTemperature.find()
         .sort({"date": -1})
         // .select('date')
@@ -24,6 +27,7 @@ exports.isUpToDate = async function () {
 }
 
 exports.syncForToday = async function () {
+    const DailyTemperature = await getDailyTemperatureModel();
     const latestDayTemperature = await DailyTemperature.find()
         .sort({"date": -1})
         // .select('date')

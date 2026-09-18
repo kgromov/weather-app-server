@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const {connectToDatabase} = require("../config/db-config");
 
 const temperatureSchema = new mongoose.Schema({
     date: {
@@ -12,5 +13,13 @@ const temperatureSchema = new mongoose.Schema({
     nightTemperature: Number
 }, { collection : 'weather_archive' });
 
+const DailyTemperature = mongoose.models.DailyTemperature
+    || mongoose.model('DailyTemperature', temperatureSchema);
+
+async function getDailyTemperatureModel() {
+    await connectToDatabase();
+    return DailyTemperature;
+}
+
 exports.temperatureSchema = temperatureSchema;
-exports.DailyTemperature = mongoose.model('DailyTemperature', temperatureSchema);
+exports.getDailyTemperatureModel = getDailyTemperatureModel;

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const {getDailyTemperatureModel} = require("../model/daily-temperature");
 // ========== common stages ==========
 const avgTemperaturesStage = {
     $round: [
@@ -43,16 +43,16 @@ const projectTemperaturesStage = {
     },
 };
 // =========== summary ==============
-const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
-
 exports.getWeatherForToday = async function () {
     const currentDate = new Date().toISOString()/*.slice(0, 10)*/;
+    const DailyTemperature = await getDailyTemperatureModel();
     const result = await DailyTemperature.findOne({data: currentDate});
     console.log(`weather for ${currentDate}: ${result}`);
     return result;
 
 }
 exports.getWeatherAtDay = async function (day) {
+    const DailyTemperature = await getDailyTemperatureModel();
     const result = await DailyTemperature.findOne({data: new Date(day)});
     console.log(`weather for ${day}: ${result}`);
     return result;
@@ -62,6 +62,7 @@ exports.getMonthWeatherPlain = async function (month, year) {
     console.log(`Request params: month = ${month}, year = ${year}`);
     const from = new Date(year, month - 1, 1);
     const to = new Date(year, month, 1);
+    const DailyTemperature = await getDailyTemperatureModel();
     const result = await DailyTemperature.find(
         {
             date: {$gte: from, $lt: to}
@@ -116,6 +117,7 @@ exports.getMonthWeather = async function (y, m) {
         }
     ];
     console.trace(`${JSON.stringify(pipeline, null, 2)}`);
+    const DailyTemperature = await getDailyTemperatureModel();
     const result = await DailyTemperature.aggregate(pipeline);
     console.log(`weather for ${from.toLocaleString('default', {month: 'long'})}, ${year}: ${JSON.stringify(result)}`);
     return result;
@@ -153,6 +155,7 @@ exports.getWeatherDayInRange = async function (day, years) {
         {$limit: +years || Number.MAX_SAFE_INTEGER}
     ];
     console.log(`${JSON.stringify(pipeline, null, 2)}`);
+    const DailyTemperature = await getDailyTemperatureModel();
     const result = await DailyTemperature.aggregate(pipeline);
     console.log(`weather for ${day} in ${years | 13} years: ${JSON.stringify(result)}`);
     return result;
@@ -216,6 +219,7 @@ exports.getYearsToShow = async function () {
             },
         },
     ];
+    const DailyTemperature = await getDailyTemperatureModel();
     const result = await DailyTemperature.aggregate(pipelineLocal);
     console.log('weather for ' + JSON.stringify(result) + ' years');
     return result[0].maxYear - result[0].minYear + 1;
@@ -342,6 +346,7 @@ exports.getYearsBySeasonsTemperature = async function () {
         finalMappingStage,
         sortByYearStage
     ];
+    const DailyTemperature = await getDailyTemperatureModel();
     const result = await DailyTemperature.aggregate(pipeline);
     console.log('Seasons temperature ' + JSON.stringify(result) + ' by years');
     return result;
@@ -414,6 +419,7 @@ async function getYearsSummary() {
         removeIdStage,
         sortByYearStage
     ];
+    const DailyTemperature = await getDailyTemperatureModel();
     const result = await DailyTemperature.aggregate(pipeline);
     console.log('Temperature ' + JSON.stringify(result) + ' by years');
     return result;
@@ -474,7 +480,8 @@ exports.getYearsByMonthsTemperature = async function () {
         sortByYearStage
     ];
 
-    const result = await DailyTemperature.aggregate(pipeline);
+    const DailyTemperature = await getDailyTemperatureModel();
+    const result = await DailyTemperature.aggregate(pipeline)
     console.log('Months temperature ' + JSON.stringify(result) + ' by years');
     return result;
 }
@@ -505,6 +512,7 @@ async function fetchDaysExtremumTemperatures(yearsSummary, field) {
                 {nightTemperature: {$in: temperatures}},
             ]
     }
+    const DailyTemperature = await getDailyTemperatureModel();
     const days = await DailyTemperature.find(query).sort({date: 1})
     console.log(days);
     const datesByYear = new Map();
