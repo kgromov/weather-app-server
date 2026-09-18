@@ -54,7 +54,7 @@ exports.syncForToday = async function () {
             ).map(dailyTemp => new DailyTemperature({...dailyTemp}));
         }).then(dailyTemperatures => {
             console.info(`DailyTemperatures model data to insert = ${JSON.stringify(dailyTemperatures)}`);
-            DailyTemperature.insertMany(dailyTemperatures);
+            return DailyTemperature.insertMany(dailyTemperatures);
         }).then(() => {
             console.log(`Sync since since ${syncDates[0]} to ${syncDates[daysDiff - 1]} is finished`);
             return new SyncStatus(StatusCode.SUCCESS, `Sync succeed: since ${syncDates[0]} to ${syncDates[daysDiff - 1]}`);
