@@ -4,14 +4,14 @@ const mongoose = require("mongoose");
 const cron = require("node-cron");
 require('dotenv').config();
 
-const dbConfig = require("./app/config/db-config");
 const webConfig = require("./app/config/web-config");
 const weatherService = require('./app/service/weather-service');
 const temperatureService = require("./app/service/temperature-service");
-// workaround for vercel that loads only modules from index.js - aka serviseless function
+// workaround for vercel that loads only modules from index.js - aka serviceless function
 const HTMLParser = require('node-html-parser');
 const httpService = require("./app/service/http-service");
 const DateUtis = require("./app/service/date-utils");
+const {connectToDatabase} = require("./app/config/db-config");
 
 const app = express();
 const corsOptions = {
@@ -24,8 +24,7 @@ app.use(express.json())
 app.use(cors(corsOptions));
 
 // establish connection
-mongoose.set('strictQuery', true);
-mongoose.connect(dbConfig.uri)
+connectToDatabase()
     .then(() => console.log('Successfully connected to MongoDB ...'))
     .catch(e => console.error('Failed connected to MongoDB ...', e));
 
