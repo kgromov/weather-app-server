@@ -71,8 +71,9 @@ exports.syncForToday = async function () {
 function syncSinceDatePromise(date) {
     const url = `${webConfig.weatherURL}/${date}`;
     const encodedUrl = encodeURI(url);
-    return http.get(encodedUrl)
-        .then(response => extractDailyTemperature(date, response));
+    return fetch(encodedUrl, {
+        headers: { 'Connection': 'close' }
+    }).then(response => extractDailyTemperature(date, response));
 }
 
 function extractDailyTemperature(date, weatherContent) {
