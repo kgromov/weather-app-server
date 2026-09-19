@@ -14,7 +14,7 @@ exports.get = function(url) {
         client.get(url, (resp) => {
             let chunks = [];
 
-            // A chunk of data has been recieved.
+            // A chunk of data has been received.
             resp.on('data', (chunk) => {
                 chunks.push(chunk);
             });

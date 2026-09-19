@@ -19,8 +19,10 @@ exports.TemperatureMeasurementsDto = class {
     }
 
     static calculatePartOfTheDayTemperature(from, to, dailyMeasurements) {
-        const targetMeasurements = dailyMeasurements.filter(m => m.hour >= from && m.hour < to);
-        const average = targetMeasurements.map(m => m.temperature).reduce((a, b) => a + b, 0) / targetMeasurements.length;
+        const targetMeasurements = dailyMeasurements.filter(m => m.hour >= from && m.hour < to && m.temperature !== null);
+        const average = targetMeasurements.length > 0
+            ? targetMeasurements.map(m => m.temperature).reduce((a, b) => a + b, 0) / targetMeasurements.length
+            : null;
         console.trace('Average for: ', targetMeasurements, ' [', from, '; ', to, ']: ', average);
         return average;
     }
