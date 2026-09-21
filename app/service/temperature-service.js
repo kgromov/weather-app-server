@@ -28,8 +28,8 @@ exports.syncForToday = async function () {
         console.log(`Up to date ${from}`);
         return new SyncStatus(StatusCode.SUCCESS, `Sync succeed: Up to date ${DateUtils.formatToLocalizedDate(latestDate)}`);
     }
-    return sinopticService.getTemperature(from, endDate)
-        // return openMeteoService.getTemperature(DateUtils.formatToISODate(from), DateUtils.formatToISODate(endDate))
+    // return sinopticService.getTemperature(from, endDate)
+        return openMeteoService.getTemperature(DateUtils.formatToLocalizedDate(from), DateUtils.formatToLocalizedDate(endDate))
         .then(temps => {
             console.log(`Extracted dailies temperature: ${JSON.stringify(temps)}`);
             return temps.filter(dailyTemp =>
