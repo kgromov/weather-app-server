@@ -4,8 +4,8 @@ const webConfig = require("../config/web-config");
 
 
 exports.getTemperature = async function (from, to) {
-    if (from >= to) {
-        return Promise.resolve([]);
+    if (from > to) {
+        return Promise.reject()
     }
     console.log(`Fetch data by url = ` +`${webConfig.weatherApiURL}&start_date=${from}&end_date=${to}`);
     return fetch(`${webConfig.weatherApiURL}&start_date=${from}&end_date=${to}`)

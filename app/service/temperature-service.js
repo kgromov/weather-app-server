@@ -3,19 +3,16 @@ const openMeteoService = require("./open-meteo-provider.service");
 const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
 const DateUtils = require("./date-utils");
 const {SyncStatus, StatusCode} = require("../model/dto");
+const {addDays, differenceInDays, isSameDay} = require("date-fns");
 
 exports.isUpToDate = async function () {
     const latestDayTemperature = await DailyTemperature.find()
         .sort({"date": -1})
         // .select('date')
         .limit(1);
-    const currentDate = new Date();
-    const endDate = currentDate.getUTCHours() < 20 ? DateUtils.addDays(currentDate, -1) : currentDate;
     const latestDate = new Date(latestDayTemperature["0"].date);
-    console.log('Sync date in range [', latestDate, '; ', endDate, ']');
-    const daysDiff = DateUtils.getDatesDiffInDays(latestDate, endDate);
-    console.log('Calculated days diff = ', daysDiff);
-    return daysDiff <= 0;
+    const nextEndDate = getNextEndDate();
+    return isSameDay(latestDate, nextEndDate);
 }
 
 exports.syncForToday = async function () {
@@ -23,19 +20,16 @@ exports.syncForToday = async function () {
         .sort({"date": -1})
         // .select('date')
         .limit(1);
-    const currentDate = new Date();
-    const endDate = currentDate.getUTCHours() < 20 ? DateUtils.addDays(currentDate, -1) : currentDate;
+    const endDate = getNextEndDate();
     const latestDate = new Date(latestDayTemperature["0"].date);
-    console.log('Sync date in range [', latestDate, '; ', endDate, ']');
     const from = DateUtils.addDays(latestDate, 1);
-    const daysDiff = DateUtils.getDatesDiffInDays(from, endDate);
-    console.log('Calculated days diff = ', daysDiff);
-    if (daysDiff <= 0) {
+    console.log('Sync date in range [', DateUtils.formatToLocalizedDate(from), '; ', DateUtils.formatToLocalizedDate(endDate), ']');
+    if (isSameDay(latestDate, endDate)) {
         console.log(`Up to date ${from}`);
-        return new SyncStatus(StatusCode.SUCCESS, `Sync succeed: Up to date ${DateUtils.formatToISODate(from)}`);
+        return new SyncStatus(StatusCode.SUCCESS, `Sync succeed: Up to date ${DateUtils.formatToLocalizedDate(latestDate)}`);
     }
-    // const request = sinopticService.getTemperature(from, endDate);
-    return openMeteoService.getTemperature(DateUtils.formatToISODate(from), DateUtils.formatToISODate(endDate))
+    return sinopticService.getTemperature(from, endDate)
+        // return openMeteoService.getTemperature(DateUtils.formatToISODate(from), DateUtils.formatToISODate(endDate))
         .then(temps => {
             console.log(`Extracted dailies temperature: ${JSON.stringify(temps)}`);
             return temps.filter(dailyTemp =>
@@ -52,6 +46,11 @@ exports.syncForToday = async function () {
             console.error('Unable to save records  due to: ', err);
             return new SyncStatus(StatusCode.FAILURE, `Sync failed: Unable to save records  due to:  ${err}`);
         });
+}
+
+function getNextEndDate() {
+    const currentDateInKyiv = DateUtils.dateInUATimeZone(new Date());
+    return currentDateInKyiv.getHours() < 20 ? DateUtils.addDays(currentDateInKyiv, -1) : currentDateInKyiv;
 }
 
 

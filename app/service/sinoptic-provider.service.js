@@ -10,14 +10,14 @@ const TemperatureMeasurementsDto = dto.TemperatureMeasurementsDto;
 
 exports.getTemperature = async function(from, to) {
     const daysDiff = DateUtils.getDatesDiffInDays(from, to);
-    if (daysDiff <= 0) {
-        return Promise.resolve([]);
+    if (daysDiff < 0) {
+        return Promise.reject();
     }
-    const syncDates = daysDiff > 1
-        ? [...Array(daysDiff).keys()]
+    const syncDates = daysDiff > 0
+        ? [...Array(daysDiff + 1).keys()]
             .map(day => DateUtils.addDays(from, day))
-            .map(date => DateUtils.formatToISODate(date))
-        : [DateUtils.formatToISODate(to)];
+            .map(date => DateUtils.formatToLocalizedDate(date))
+        : [DateUtils.formatToLocalizedDate(to)];
     console.log('syncDates = ', syncDates, '; length = ', syncDates.length);
     return Promise.all(syncDates.map(syncDate => syncSinceDatePromise(syncDate)));
 }
