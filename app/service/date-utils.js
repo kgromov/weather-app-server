@@ -1,4 +1,4 @@
-const {differenceInDays, startOfDay, format} = require("date-fns");
+const {differenceInDays, startOfDay, format, addDays} = require("date-fns");
 const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
 exports.getDatesDiffInDaysISO = function (from, to) {
@@ -14,9 +14,7 @@ exports.getDatesDiffInDays = function (from, to) {
 }
 
 exports.addDays = function (date, days) {
-    const resultDate = new Date(date);
-    resultDate.setDate(resultDate.getDate() + days);
-    return resultDate;
+    return addDays(startOfDay(date), days);
 }
 
 exports.formatToISODate = function(date) {
