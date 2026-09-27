@@ -3,7 +3,7 @@ const openMeteoService = require("./open-meteo-provider.service");
 const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
 const DateUtils = require("./date-utils");
 const {SyncStatus, StatusCode} = require("../model/dto");
-const {addDays, differenceInDays, isSameDay} = require("date-fns");
+const {addDays, differenceInDays, isSameDay, startOfDay} = require("date-fns");
 
 exports.isUpToDate = async function () {
     const latestDayTemperature = await DailyTemperature.find()
@@ -50,7 +50,8 @@ exports.syncForToday = async function () {
 
 function getNextEndDate() {
     const currentDateInKyiv = DateUtils.dateInUATimeZone(new Date());
-    return currentDateInKyiv.getHours() < 20 ? DateUtils.addDays(currentDateInKyiv, -1) : currentDateInKyiv;
+    const nextEndDate = currentDateInKyiv.getHours() < 20 ? DateUtils.addDays(currentDateInKyiv, -1) : currentDateInKyiv;
+    return startOfDay(nextEndDate);
 }
 
 
