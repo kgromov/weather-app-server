@@ -25,7 +25,7 @@ app.use(cors(corsOptions));
 
 // establish connection
 mongoose.set('strictQuery', true);
-mongoose.connect(dbConfig.uri)
+mongoose.connect(dbConfig.uri, { directConnection: true })
     .then(() => console.log('Successfully connected to MongoDB ...'))
     .catch(e => console.error('Failed connected to MongoDB ...', e));
 
