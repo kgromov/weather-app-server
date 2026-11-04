@@ -3,10 +3,7 @@ const avgTemperaturesStage = {
     $round: [
         {
             $avg: [
-                "$morningTemperature",
-                "$afternoonTemperature",
-                "$eveningTemperature",
-                "$nightTemperature"
+                "$avg",
             ]
         },
         2
@@ -23,20 +20,10 @@ const projectTemperaturesStage = {
             $year: "$date",
         },
         minTemp: {
-            $min: [
-                "$morningTemperature",
-                "$afternoonTemperature",
-                "$eveningTemperature",
-                "$nightTemperature",
-            ],
+            $min: ["$min"],
         },
         maxTemp: {
-            $max: [
-                "$morningTemperature",
-                "$afternoonTemperature",
-                "$eveningTemperature",
-                "$nightTemperature",
-            ],
+            $max: ["$max"],
         },
         avgTemp: avgTemperaturesStage
     },
@@ -105,8 +92,8 @@ exports.getMonthWeather = async function (y, m) {
             $project: {
                 _id: 0,
                 day: {$dayOfMonth: "$date"},
-                minTemp: {$min: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"]},
-                maxTemp: {$max: ["$morningTemperature", "$afternoonTemperature", "$eveningTemperature", "$nightTemperature"]},
+                minTemp: {$min: ["$min"]},
+                maxTemp: {$max: ["$max"]},
                 avgTemp: avgTemperaturesStage
             }
         },
@@ -356,22 +343,8 @@ async function getYearsSummary() {
             year: {
                 $year: "$date",
             },
-            minTemp: {
-                $min: [
-                    "$morningTemperature",
-                    "$afternoonTemperature",
-                    "$eveningTemperature",
-                    "$nightTemperature",
-                ]
-            },
-            maxTemp: {
-                $max: [
-                    "$morningTemperature",
-                    "$afternoonTemperature",
-                    "$eveningTemperature",
-                    "$nightTemperature",
-                ]
-            },
+            minTemp: {$min: ["$min"]},
+            maxTemp: {$max: ["$max"]},
             avgTemp: avgTemperaturesStage
         }
     };
@@ -498,10 +471,8 @@ async function fetchDaysExtremumTemperatures(yearsSummary, field) {
     const query = {
         $or:
             [
-                {morningTemperature: {$in: temperatures}},
-                {afternoonTemperature: {$in: temperatures}},
-                {eveningTemperature: {$in: temperatures}},
-                {nightTemperature: {$in: temperatures}},
+                {min: {$in: temperatures}},
+                {max: {$in: temperatures}},
             ]
     }
     const days = await DailyTemperature.find(query).sort({date: 1})
@@ -520,9 +491,7 @@ async function fetchDaysExtremumTemperatures(yearsSummary, field) {
 
 function findExtremumTemperatureDates(yearSummary, temperature, datesByYear) {
     return datesByYear.get(yearSummary.year)
-        .filter(day => day.morningTemperature === temperature
-            || day.afternoonTemperature === temperature
-            || day.eveningTemperature === temperature
-            || day.nightTemperature === temperature
+        .filter(day => day.max === temperature
+            || day.min === temperature
         ).map(day => day.date);
 }
