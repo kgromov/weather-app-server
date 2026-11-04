@@ -9,7 +9,10 @@ const temperatureSchema = new mongoose.Schema({
     morningTemperature: Number,
     afternoonTemperature: Number,
     eveningTemperature: Number,
-    nightTemperature: Number
+    nightTemperature: Number,
+    max: Number,
+    min: Number,
+    avg: Number,
 }, { collection : 'weather_archive' });
 
 exports.temperatureSchema = temperatureSchema;

@@ -1,4 +1,3 @@
-const {DailyTemperature} = require("../model/daily-temperature");
 const dto = require('../model/dto');
 const webConfig = require("../config/web-config");
 const http = require("./http-service");

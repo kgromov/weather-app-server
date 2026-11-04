@@ -3,7 +3,7 @@ const openMeteoService = require("./open-meteo-provider.service");
 const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
 const DateUtils = require("./date-utils");
 const {SyncStatus, StatusCode} = require("../model/dto");
-const {addDays, differenceInDays, isSameDay, startOfDay} = require("date-fns");
+const {isSameDay, startOfDay} = require("date-fns");
 
 exports.isUpToDate = async function () {
     const latestDayTemperature = await DailyTemperature.find()
