@@ -468,13 +468,9 @@ exports.getMaxTemperatureDays = async function () {
 async function fetchDaysExtremumTemperatures(yearsSummary, field) {
     const temperatures = yearsSummary.map(year => year[field]);
     console.log(temperatures);
-    const query = {
-        $or:
-            [
-                {min: {$in: temperatures}},
-                {max: {$in: temperatures}},
-            ]
-    }
+    const query = field === 'min'
+        ? {min: {$in: temperatures}}
+        : {max: {$in: temperatures}};
     const days = await DailyTemperature.find(query).sort({date: 1})
     console.log(days);
     const datesByYear = new Map();
