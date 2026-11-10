@@ -15,21 +15,17 @@ exports.TemperatureMeasurementsDto = class {
             this.morningTemperature = this.constructor.calculatePartOfTheDayTemperature(6, 12, dailyMeasurements);
             this.afternoonTemperature = this.constructor.calculatePartOfTheDayTemperature(12, 18, dailyMeasurements);
             this.eveningTemperature = this.constructor.calculatePartOfTheDayTemperature(18, 24, dailyMeasurements);
-            this.max = Math.max(dailyMeasurements.map(m => m.temperature));
-            this.min = Math.min(dailyMeasurements.map(m => m.temperature));
-            this.avg = dailyMeasurements.length > 0
-                ? dailyMeasurements.map(m => m.temperature).reduce((a, b) => a + b, 0) / dailyMeasurements.length
-                : null;
+            this.max = dailyMeasurements.map(m => m.temperature).reduce((a, b) => Math.max(a, b));
+            this.min = dailyMeasurements.map(m => m.temperature).reduce((a, b) => Math.min(a, b));
+            this.avg = dailyMeasurements.map(m => m.temperature).reduce((a, b) => a + b, 0) / dailyMeasurements.length;
         }
     }
 
     static calculatePartOfTheDayTemperature(from, to, dailyMeasurements) {
         const targetMeasurements = dailyMeasurements.filter(m => m.hour >= from && m.hour < to && m.temperature !== null);
-        const average = targetMeasurements.length > 0
+        return targetMeasurements.length > 0
             ? targetMeasurements.map(m => m.temperature).reduce((a, b) => a + b, 0) / targetMeasurements.length
             : null;
-        console.trace('Average for: ', targetMeasurements, ' [', from, '; ', to, ']: ', average);
-        return average;
     }
 }
 
