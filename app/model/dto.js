@@ -16,8 +16,8 @@ exports.TemperatureMeasurementsDto = class {
             this.afternoonTemperature = this.constructor.calculatePartOfTheDayTemperature(12, 18, dailyMeasurements);
             this.eveningTemperature = this.constructor.calculatePartOfTheDayTemperature(18, 24, dailyMeasurements);
             this.max = Math.max(dailyMeasurements.map(m => m.temperature));
-            this.max = Math.min(dailyMeasurements.map(m => m.temperature));
-            this.max = dailyMeasurements.length > 0
+            this.min = Math.min(dailyMeasurements.map(m => m.temperature));
+            this.avg = dailyMeasurements.length > 0
                 ? dailyMeasurements.map(m => m.temperature).reduce((a, b) => a + b, 0) / dailyMeasurements.length
                 : null;
         }
