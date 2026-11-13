@@ -10,65 +10,92 @@ const avgTemperaturesStage = {
     ]
 };
 
-const projectTemperaturesStage = {
+const projectToMonthWithDateStage = {
     $project: {
-        _id: null,
-        month: {
-            $month: "$date",
+        _id: 0,
+        date: 1,
+        month: {$month: "$date"},
+        year: {$year: "$date"},
+        minTemp: {$min: ["$min"]},
+        maxTemp: {$max: ["$max"]},
+        avgTemp: {$avg: ["$avg"]}
+    }
+};
+
+const extremumDatesStage = {
+    $addFields: {
+        maxTempDates: {
+            $map: {
+                input: {
+                    $filter: {
+                        input: "$days",
+                        as: "d",
+                        cond: {$eq: ["$$d.maxTemp", "$maxTemp"]}
+                    }
+                },
+                as: "d",
+                in: "$$d.date"
+            }
         },
-        year: {
-            $year: "$date",
-        },
-        minTemp: {
-            $min: ["$min"],
-        },
-        maxTemp: {
-            $max: ["$max"],
-        },
-        avgTemp: avgTemperaturesStage
-    },
+        minTempDates: {
+            $map: {
+                input: {
+                    $filter: {
+                        input: "$days",
+                        as: "d",
+                        cond: {$eq: ["$$d.minTemp", "$minTemp"]}
+                    }
+                },
+                as: "d",
+                in: "$$d.date"
+            }
+        }
+    }
+};
+
+const removeDaysStage =  {
+    $project: { days: 0 }
 };
 // =========== summary ==============
 const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
 
-exports.getWeatherForToday = async function () {
-    const currentDate = new Date().toISOString()/*.slice(0, 10)*/;
-    const result = await DailyTemperature.findOne({data: currentDate});
-    console.log(`weather for ${currentDate}: ${result}`);
-    return result;
+// data methods
+exports.getDailyWeatherInYears = async function (day, years) {
+    console.log(`Request params: day = ${day}, years = ${years}`);
+    const date = new Date(day);
+    const dayMonth = '-' + String((date.getMonth() + 1)).padStart(2, 0) + '-' + String(date.getDate()).padStart(2, '0');
+    console.log(`dayMonth = ${dayMonth}`);
 
-}
-exports.getWeatherAtDay = async function (day) {
-    const result = await DailyTemperature.findOne({data: new Date(day)});
-    console.log(`weather for ${day}: ${result}`);
-    return result;
-}
-
-exports.getMonthWeatherPlain = async function (month, year) {
-    console.log(`Request params: month = ${month}, year = ${year}`);
-    const from = new Date(year, month - 1, 1);
-    const to = new Date(year, month, 1);
-    const result = await DailyTemperature.find(
+    const pipeline = [
         {
-            date: {$gte: from, $lt: to}
+            $project: {
+                _id: 0,
+                morningTemperature: 1,
+                afternoonTemperature: 1,
+                eveningTemperature: 1,
+                nightTemperature: 1,
+                date: {
+                    $dateToString: {
+                        date: "$date",
+                        format: "%Y-%m-%d",
+
+                    }
+                }
+            }
         },
         {
-            _id: 0,
-            day: {
-                $dateToString: {
-                    date: "$date",
-                    format: "%d",
-                }
-            },
-            date: 1,
-            morningTemperature: 1,
-            afternoonTemperature: 1,
-            eveningTemperature: 1,
-            nightTemperature: 1
-        }
-    ).sort({date: 1});
-    console.log(`weather for ${from.toLocaleString('default', {month: 'long'})}, ${year}: ${JSON.stringify(result)}`);
+            $match: {
+                date: {$regex: dayMonth}
+            }
+        },
+        {$sort: {date: -1}},
+        {$limit: +years || Number.MAX_SAFE_INTEGER}
+    ];
+    console.log(`${JSON.stringify(pipeline, null, 2)}`);
+    const result = await DailyTemperature.aggregate(pipeline);
+    console.log(`weather for ${day} in ${years | 13} years: ${JSON.stringify(result)}`);
     return result;
+
 }
 
 exports.getMonthWeather = async function (y, m) {
@@ -107,105 +134,67 @@ exports.getMonthWeather = async function (y, m) {
     return result;
 }
 
-exports.getWeatherDayInRange = async function (day, years) {
-    console.log(`Request params: day = ${day}, years = ${years}`);
-    const date = new Date(day);
-    const dayMonth = '-' + String((date.getMonth() + 1)).padStart(2, 0) + '-' + String(date.getDate()).padStart(2, '0');
-    console.log(`dayMonth = ${dayMonth}`);
-
-    const pipeline = [
-        {
-            $project: {
-                _id: 0,
-                morningTemperature: 1,
-                afternoonTemperature: 1,
-                eveningTemperature: 1,
-                nightTemperature: 1,
-                date: {
-                    $dateToString: {
-                        date: "$date",
-                        format: "%Y-%m-%d",
-
-                    }
+exports.getYearsByMonthsTemperature = async function () {
+    const groupByMonthAndYearStage = {
+        $group: {
+            _id: {
+                year: "$year",
+                month: "$month",
+            },
+            minTemp: {$min: "$minTemp"},
+            maxTemp: {$max: "$maxTemp"},
+            avgTemp: {$avg: "$avgTemp"},
+            days: {
+                $push: {
+                    date: "$date",
+                    minTemp: "$minTemp",
+                    maxTemp: "$maxTemp"
                 }
             }
         },
-        {
-            $match: {
-                date: {$regex: dayMonth}
-            }
+    };
+
+    const groupByYearStage = {
+        $group: {
+            _id: "$_id.year",
+            months: {
+                $push: {
+                    month: "$_id.month",
+                    minTemp: "$minTemp",
+                    maxTemp: "$maxTemp",
+                    avgTemp: { $round: ["$avgTemp", 2] },
+                    minTempDates: "$minTempDates",
+                    maxTempDates: "$maxTempDates"
+                },
+            },
         },
-        {$sort: {date: -1}},
-        {$limit: +years || Number.MAX_SAFE_INTEGER}
+    };
+
+    const removeIdStage = {
+        $project: {
+            _id: 0,
+            year: "$_id",
+            months: 1
+        },
+    };
+
+    const sortByYearStage = {
+        $sort: {year: 1},
+    };
+
+    const pipeline = [
+        projectToMonthWithDateStage,
+        groupByMonthAndYearStage,
+        extremumDatesStage,
+        removeDaysStage,
+        groupByYearStage,
+        removeIdStage,
+        sortByYearStage
     ];
-    console.log(`${JSON.stringify(pipeline, null, 2)}`);
+
     const result = await DailyTemperature.aggregate(pipeline);
-    console.log(`weather for ${day} in ${years | 13} years: ${JSON.stringify(result)}`);
+    console.log('Months temperature ' + JSON.stringify(result) + ' by years');
     return result;
-
-}
-exports.getYearsToShow = async function () {
-    console.log('getYearsToShow');
-
-    const pipeline = [
-        {
-            $group: {
-                _id: null,
-                min_date: {
-                    $min: "$date",
-                },
-                max_date: {
-                    $max: "$date",
-                },
-            },
-        },
-        {
-            $project: {
-                _id: 0,
-                min_date: {
-                    $toDate: "$min_date",
-                },
-                max_date: {
-                    $toDate: "$max_date",
-                },
-                diff: {
-                    $dateDiff: {
-                        startDate: "$min_date",
-                        endDate: "$max_date",
-                        unit: "year",
-                    },
-                },
-            },
-        },
-    ];
-
-    const pipelineLocal = [
-        {
-            $group: {
-                _id: null,
-                min_date: {
-                    $min: "$date",
-                },
-                max_date: {
-                    $max: "$date",
-                },
-            },
-        },
-        {
-            $project: {
-                minYear: {
-                    $year: "$min_date",
-                },
-                maxYear: {
-                    $year: "$max_date",
-                }
-            },
-        },
-    ];
-    const result = await DailyTemperature.aggregate(pipelineLocal);
-    console.log('weather for ' + JSON.stringify(result) + ' years');
-    return result[0].maxYear - result[0].minYear + 1;
-
 }
 
 exports.getYearsBySeasonsTemperature = async function () {
@@ -269,8 +258,7 @@ exports.getYearsBySeasonsTemperature = async function () {
                             },
                             then: "AUTUMN",
                         },
-                    ],
-                    default: "Not found",
+                    ]
                 },
             },
         },
@@ -278,23 +266,21 @@ exports.getYearsBySeasonsTemperature = async function () {
 
     const groupByYearSeasonStage = {
         $group: {
-            _id: {
-                year: "$year",
-                season: "$season",
-            },
-            minTemp: {
-                $min: "$minTemp",
-            },
-            maxTemp: {
-                $max: "$maxTemp",
-            },
-            avgTemp: {
-                $avg: "$avgTemp",
+            _id: { year: "$year", season: "$season" },
+            minTemp: { $min: "$minTemp" },
+            maxTemp: { $max: "$maxTemp" },
+            avgTemp: { $avg: "$avgTemp" },
+            days: {
+                $push: {
+                    date: "$date",
+                    minTemp: "$minTemp",
+                    maxTemp: "$maxTemp"
+                }
             }
         }
     };
 
-    const aggregateSeasonsByYear = {
+    const aggregateSeasonsByYear =  {
         $group: {
             _id: "$_id.year",
             seasons: {
@@ -302,10 +288,12 @@ exports.getYearsBySeasonsTemperature = async function () {
                     season: "$_id.season",
                     minTemp: "$minTemp",
                     maxTemp: "$maxTemp",
-                    avgTemp: "$avgTemp",
-                },
-            },
-        },
+                    avgTemp: { $round: ["$avgTemp", 2] },
+                    minTempDates: "$minTempDates",
+                    maxTempDates: "$maxTempDates"
+                }
+            }
+        }
     };
 
     const finalMappingStage = {
@@ -321,9 +309,11 @@ exports.getYearsBySeasonsTemperature = async function () {
     };
 
     const pipeline = [
-        projectTemperaturesStage,
+        projectToMonthWithDateStage,
         projectSeasonStage,
         groupByYearSeasonStage,
+        extremumDatesStage,
+        removeDaysStage,
         aggregateSeasonsByYear,
         finalMappingStage,
         sortByYearStage
@@ -334,34 +324,19 @@ exports.getYearsBySeasonsTemperature = async function () {
 
 }
 
-exports.getYearsSummary = getYearsSummary
-
-async function getYearsSummary() {
-    const projectTemperaturesStage = {
-        $project: {
-            _id: null,
-            year: {
-                $year: "$date",
-            },
-            minTemp: {$min: ["$min"]},
-            maxTemp: {$max: ["$max"]},
-            avgTemp: avgTemperaturesStage
-        }
-    };
-
-    const groupByYearStage = {
+exports.getYearsSummary = async function() {
+    const groupByYearStage =  {
         $group: {
-            _id: {
-                year: "$year"
-            },
-            minTemp: {
-                $min: "$minTemp",
-            },
-            maxTemp: {
-                $max: "$maxTemp",
-            },
-            avgTemp: {
-                $avg: "$avgTemp",
+            _id: { year: "$year" },
+            minTemp: { $min: "$minTemp" },
+            maxTemp: { $max: "$maxTemp" },
+            avgTemp: { $avg: "$avgTemp" },
+            days: {
+                $push: {
+                    date: "$date",
+                    minTemp: "$minTemp",
+                    maxTemp: "$maxTemp"
+                }
             }
         }
     };
@@ -369,11 +344,13 @@ async function getYearsSummary() {
     const removeIdStage = {
         $project: {
             _id: 0,
-            year: "$_id.year",
+            year: "$_id",
             min: "$minTemp",
             max: "$maxTemp",
-            avg: "$avgTemp",
-        },
+            avg: {$round: ["$avgTemp", 2]},
+            minTempDates: 1,
+            maxTempDates: 1
+        }
     };
 
     const sortByYearStage = {
@@ -381,8 +358,10 @@ async function getYearsSummary() {
     };
 
     const pipeline = [
-        projectTemperaturesStage,
+        projectToMonthWithDateStage,
         groupByYearStage,
+        extremumDatesStage,
+        removeDaysStage,
         removeIdStage,
         sortByYearStage
     ];
@@ -391,103 +370,39 @@ async function getYearsSummary() {
     return result;
 }
 
-exports.getYearsByMonthsTemperature = async function () {
-    const groupBuMonthAndYearStage = {
-        $group: {
-            _id: {
-                year: "$year",
-                month: "$month",
-            },
-            minTemp: {
-                $min: "$minTemp",
-            },
-            maxTemp: {
-                $max: "$maxTemp",
-            },
-            avgTemp: {
-                $avg: "$avgTemp",
+// service methods
+exports.getYearsToShow = async function () {
+    console.log('getYearsToShow');
+    const pipelineLocal = [
+        {
+            $group: {
+                _id: null,
+                min_date: {$min: "$date"},
+                max_date: {$max: "$date"},
             },
         },
-    };
-
-    const groupByYearStage = {
-        $group: {
-            _id: "$_id.year",
-            months: {
-                $push: {
-                    month: "$_id.month",
-                    minTemp: "$minTemp",
-                    maxTemp: "$maxTemp",
-                    avgTemp: "$avgTemp",
-                },
+        {
+            $project: {
+                minYear: {$year: "$min_date"},
+                maxYear: {$year: "$max_date"}
             },
         },
-    };
-
-    const removeIdStage = {
-        $project: {
-            _id: 0,
-            year: "$_id",
-            months: 1
-        },
-    };
-
-    const sortByYearStage = {
-        $sort: {
-            year: 1,
-        },
-    };
-
-    const pipeline = [
-        projectTemperaturesStage,
-        groupBuMonthAndYearStage,
-        groupByYearStage,
-        removeIdStage,
-        sortByYearStage
     ];
+    const result = await DailyTemperature.aggregate(pipelineLocal);
+    console.log('weather for ' + JSON.stringify(result) + ' years');
+    return result[0].maxYear - result[0].minYear + 1;
+}
 
-    const result = await DailyTemperature.aggregate(pipeline);
-    console.log('Months temperature ' + JSON.stringify(result) + ' by years');
+// others
+exports.getWeatherForToday = async function () {
+    const currentDate = new Date().toISOString()/*.slice(0, 10)*/;
+    const result = await DailyTemperature.findOne({data: currentDate});
+    console.log(`weather for ${currentDate}: ${result}`);
     return result;
 }
 
-exports.getMaxTemperatureDays = async function () {
-    let yearsSummary = await getYearsSummary();
-    const maxTempDatesByYear = await fetchDaysExtremumTemperatures(yearsSummary, 'max');
-    const minTempDatesByYear = await fetchDaysExtremumTemperatures(yearsSummary, 'min');
-    yearsSummary = yearsSummary.map(year => (
-        {
-            ...year,
-            maxTempDates: findExtremumTemperatureDates(year, year.max, maxTempDatesByYear),
-            minTempDates: findExtremumTemperatureDates(year, year.min, minTempDatesByYear)
-        }));
-    console.log('Temperature ' + JSON.stringify(yearsSummary) + ' by years');
-    return yearsSummary;
-}
-
-async function fetchDaysExtremumTemperatures(yearsSummary, field) {
-    const temperatures = yearsSummary.map(year => year[field]);
-    console.log(temperatures);
-    const query = field === 'min'
-        ? {min: {$in: temperatures}}
-        : {max: {$in: temperatures}};
-    const days = await DailyTemperature.find(query).sort({date: 1})
-    console.log(days);
-    const datesByYear = new Map();
-    days.forEach(day => {
-        const year = day.date.getFullYear();
-        if (datesByYear.has(year)) {
-            datesByYear.get(year).push(day);
-        } else {
-            datesByYear.set(year, [day]);
-        }
-    });
-    return datesByYear;
-}
-
-function findExtremumTemperatureDates(yearSummary, temperature, datesByYear) {
-    return datesByYear.get(yearSummary.year)
-        .filter(day => day.max === temperature
-            || day.min === temperature
-        ).map(day => day.date);
+exports.getWeatherAtDay = async function (day) {
+    const result = await DailyTemperature.findOne({data: new Date(day)});
+    console.log(`weather for ${day}: ${result}`);
+    return result;
 }
