@@ -2,10 +2,6 @@ const express = require("express");
 const weatherService = require('./../service/weather-service');
 const router = express.Router();
 
-router.get("/api/years", async (req, res) => {
-    const yearsToShow = await weatherService.getYearsToShow();
-    res.status(200).json(yearsToShow);
-});
 
 router.get("/api/seasons", async (req, res) => {
     const seasonsWeather = await weatherService.getYearsBySeasonsTemperature()
@@ -20,6 +16,17 @@ app.get("/api/weather/month", async (req, res) => {
 router.get("/api/weather/month/:year/:month", async (req, res) => {
     const monthWeather = await weatherService.getMonthWeather(req.params.year, req.query.month);
     res.status(200).json(monthWeather);
+});
+
+router.get("/api/:day", async (req, res) => {
+    const weatherForToday = await weatherService.getDailyWeatherInYears(req.params.day, req.query.years)
+    res.status(200).json(weatherForToday);
+});
+
+
+router.get("/api/years", async (req, res) => {
+    const yearsToShow = await weatherService.getYearsToShow();
+    res.status(200).json(yearsToShow);
 });
 
 router.get("/api/summary", async (req, res) => {
@@ -38,9 +45,5 @@ router.get("/api/single/:day", async (req, res) => {
     res.status(200).json(weatherForToday);
 });
 
-router.get("/api/:day", async (req, res) => {
-    const weatherForToday = await weatherService.getWeatherDayInRange(req.params.day, req.query.years)
-    res.status(200).json(weatherForToday);
-});
 
 module.exports = router;

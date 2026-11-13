@@ -39,19 +39,15 @@ app.get("/api/isSynced", async (req, res) => {
     res.status(200).json(isSynced);
 });
 
-app.get("/api/weather/years", async (req, res) => {
+app.get("/api/weather/yearsRange", async (req, res) => {
     const yearsToShow = await weatherService.getYearsToShow();
     res.status(200).json(yearsToShow);
 });
 
-app.get("/api/weather/seasons", async (req, res) => {
-    const seasonsWeather = await weatherService.getYearsBySeasonsTemperature()
-    res.status(200).json(seasonsWeather);
-});
-
-app.get("/api/weather/months", async (req, res) => {
-    const seasonsWeather = await weatherService.getYearsByMonthsTemperature()
-    res.status(200).json(seasonsWeather);
+// Endpoints per tab
+app.get("/api/weather/:day", async (req, res) => {
+    const weatherForToday = await weatherService.getDailyWeatherInYears(req.params.day, req.query.years)
+    res.status(200).json(weatherForToday);
 });
 
 app.get("/api/weather/month/:year/:month", async (req, res) => {
@@ -59,12 +55,22 @@ app.get("/api/weather/month/:year/:month", async (req, res) => {
     res.status(200).json(monthWeather);
 });
 
+app.get("/api/weather/months", async (req, res) => {
+    const seasonsWeather = await weatherService.getYearsByMonthsTemperature()
+    res.status(200).json(seasonsWeather);
+});
 
-app.get("/api/weather/summary", async (req, res) => {
-    const yearsWeather = await weatherService.getMaxTemperatureDays()
+app.get("/api/weather/seasons", async (req, res) => {
+    const seasonsWeather = await weatherService.getYearsBySeasonsTemperature()
+    res.status(200).json(seasonsWeather);
+});
+
+app.get("/api/weather/years", async (req, res) => {
+    const yearsWeather = await weatherService.getYearsSummary()
     res.status(200).json(yearsWeather);
 });
 
+// not used by frontend
 app.get("/api/weather/current", async (req, res) => {
     const weatherForToday = await weatherService.getWeatherForToday();
     res.status(200).json(weatherForToday);
@@ -73,11 +79,6 @@ app.get("/api/weather/current", async (req, res) => {
 app.get("/api/weather/single/:day", async (req, res) => {
     console.log(`Getting weather for day ${req.params.day}`);
     const weatherForToday = await weatherService.getWeatherAtDay(req.params.day)
-    res.status(200).json(weatherForToday);
-});
-
-app.get("/api/weather/:day", async (req, res) => {
-    const weatherForToday = await weatherService.getWeatherDayInRange(req.params.day, req.query.years)
     res.status(200).json(weatherForToday);
 });
 
