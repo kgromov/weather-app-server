@@ -45,14 +45,9 @@ app.get("/api/weather/yearsRange", async (req, res) => {
 });
 
 // Endpoints per tab
-app.get("/api/weather/:day", async (req, res) => {
-    const weatherForToday = await weatherService.getDailyWeatherInYears(req.params.day, req.query.years)
-    res.status(200).json(weatherForToday);
-});
-
-app.get("/api/weather/month/:year/:month", async (req, res) => {
-    const monthWeather = await weatherService.getMonthWeather(req.params.year, req.params.month);
-    res.status(200).json(monthWeather);
+app.get("/api/weather/years", async (req, res) => {
+    const yearsWeather = await weatherService.getYearsSummary()
+    res.status(200).json(yearsWeather);
 });
 
 app.get("/api/weather/months", async (req, res) => {
@@ -65,9 +60,14 @@ app.get("/api/weather/seasons", async (req, res) => {
     res.status(200).json(seasonsWeather);
 });
 
-app.get("/api/weather/years", async (req, res) => {
-    const yearsWeather = await weatherService.getYearsSummary()
-    res.status(200).json(yearsWeather);
+app.get("/api/weather/:day", async (req, res) => {
+    const weatherForToday = await weatherService.getDailyWeatherInYears(req.params.day, req.query.years)
+    res.status(200).json(weatherForToday);
+});
+
+app.get("/api/weather/month/:year/:month", async (req, res) => {
+    const monthWeather = await weatherService.getMonthWeather(req.params.year, req.params.month);
+    res.status(200).json(monthWeather);
 });
 
 // not used by frontend
