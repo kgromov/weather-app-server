@@ -344,7 +344,7 @@ exports.getYearsSummary = async function() {
     const removeIdStage = {
         $project: {
             _id: 0,
-            year: "$_id",
+            year: "$_id.year",
             min: "$minTemp",
             max: "$maxTemp",
             avg: {$round: ["$avgTemp", 2]},
