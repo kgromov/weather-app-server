@@ -1,13 +1,6 @@
 // ========== common stages ==========
 const avgTemperaturesStage = {
-    $round: [
-        {
-            $avg: [
-                "$avg",
-            ]
-        },
-        2
-    ]
+    $round: [{$avg: ["$avg"]}, 2]
 };
 
 const projectToMonthWithDateStage = {
@@ -55,6 +48,10 @@ const extremumDatesStage = {
 
 const removeDaysStage =  {
     $project: { days: 0 }
+};
+
+const sortDates =  {
+    $sort: { date: 1 }
 };
 // =========== summary ==============
 const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
@@ -184,6 +181,7 @@ exports.getYearsByMonthsTemperature = async function () {
 
     const pipeline = [
         projectToMonthWithDateStage,
+        sortDates,
         groupByMonthAndYearStage,
         extremumDatesStage,
         removeDaysStage,
@@ -280,11 +278,13 @@ exports.getYearsBySeasonsTemperature = async function () {
         }
     };
 
+    const SEASON_ORDERED = ["WINTER", "SPRING", "SUMMER", "AUTUMN"];
     const aggregateSeasonsByYear =  {
         $group: {
             _id: "$_id.year",
             seasons: {
                 $push: {
+                    order: {$indexOfArray: [SEASON_ORDERED, "$_id.season"]},
                     season: "$_id.season",
                     minTemp: "$minTemp",
                     maxTemp: "$maxTemp",
@@ -296,12 +296,24 @@ exports.getYearsBySeasonsTemperature = async function () {
         }
     };
 
+    const sortSeasonsStage = {
+        $set: {
+            seasons: {
+                $sortArray: {input: "$seasons", sortBy: {order: 1}}
+            }
+        }
+    };
+
     const removeIdStage = {
         $project: {
             _id: 0,
             year: "$_id",
             seasons: 1,
         },
+    };
+
+    const dropOrderStage = {
+        $project: {"seasons.order": 0}
     };
 
     const sortByYearStage = {
@@ -315,7 +327,9 @@ exports.getYearsBySeasonsTemperature = async function () {
         extremumDatesStage,
         removeDaysStage,
         aggregateSeasonsByYear,
+        sortSeasonsStage,
         removeIdStage,
+        dropOrderStage,
         sortByYearStage
     ];
     const result = await DailyTemperature.aggregate(pipeline);
