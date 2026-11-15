@@ -167,6 +167,14 @@ exports.getYearsByMonthsTemperature = async function () {
         },
     };
 
+    const sortMonthsStage = {
+        $set: {
+            months: {
+                $sortArray: {input: "$months", sortBy: {month: 1}}
+            }
+        }
+    };
+
     const removeIdStage = {
         $project: {
             _id: 0,
@@ -186,6 +194,7 @@ exports.getYearsByMonthsTemperature = async function () {
         extremumDatesStage,
         removeDaysStage,
         groupByYearStage,
+        sortMonthsStage,
         removeIdStage,
         sortByYearStage
     ];
