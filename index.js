@@ -13,13 +13,14 @@ const temperatureService = require("./app/service/temperature-service");
 const HTMLParser = require('node-html-parser');
 const httpService = require("./app/service/http-service");
 const DateUtis = require("./app/service/date-utils");
+const logger = require("./app/config/logging");
 
 const app = express();
 const corsOptions = {
     origin: webConfig.originUri
 };
-console.debug('CORS_ORIGIN = ', process.env.CORS_ORIGIN);
-console.log('cors options = ', corsOptions);
+logger.debug('CORS_ORIGIN = ', process.env.CORS_ORIGIN);
+logger.debug('cors options = ', corsOptions);
 
 app.use(express.json())
 app.use(cors(corsOptions));
@@ -28,8 +29,8 @@ app.use(morgan('dev'));
 // establish connection
 mongoose.set('strictQuery', true);
 mongoose.connect(dbConfig.uri, { directConnection:  process.env.NODE_ENV === 'LOCAL'})
-    .then(() => console.log('Successfully connected to MongoDB ...'))
-    .catch(e => console.error('Failed connected to MongoDB ...', e));
+    .then(() => logger.info('Successfully connected to MongoDB ...'))
+    .catch(e => logger.error('Failed connected to MongoDB ...', e));
 
 app.get("/api/sync", async (req, res) => {
     const syncStatus = await temperatureService.syncForToday();
@@ -79,19 +80,19 @@ app.get("/api/weather/current", async (req, res) => {
 });
 
 app.get("/api/weather/single/:day", async (req, res) => {
-    console.log(`Getting weather for day ${req.params.day}`);
+    logger.http(`Getting weather for day ${req.params.day}`);
     const weatherForToday = await weatherService.getWeatherAtDay(req.params.day)
     res.status(200).json(weatherForToday);
 });
 
 const port = process.env.PORT | 9000;
 app.listen(port, () => {
-    console.log(`Server is started on port ${port}`);
+    logger.info(`Server is started on port ${port}`);
 });
 
 // cron.schedule("*/5 * * * *", async () => {
 cron.schedule("0 0 * * *", async () => {
-    console.log(new Date().toISOString(), ': schedule weather sync');
+    logger.info(new Date().toISOString(), ': schedule weather sync');
     await temperatureService.syncForToday();
     res.status(200).json('Sync is finished');
 })
