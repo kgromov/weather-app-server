@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const morgan = require("morgan");
 const cron = require("node-cron");
 require('dotenv').config();
 
@@ -22,6 +23,7 @@ console.log('cors options = ', corsOptions);
 
 app.use(express.json())
 app.use(cors(corsOptions));
+app.use(morgan('dev'));
 
 // establish connection
 mongoose.set('strictQuery', true);
