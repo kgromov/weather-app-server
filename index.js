@@ -1,7 +1,6 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const morgan = require("morgan");
 const cron = require("node-cron");
 require('dotenv').config();
 
@@ -13,7 +12,7 @@ const temperatureService = require("./app/service/temperature-service");
 const HTMLParser = require('node-html-parser');
 const httpService = require("./app/service/http-service");
 const DateUtis = require("./app/service/date-utils");
-const logger = require("./app/config/logging");
+const {logger, morganMiddleware} = require("./app/config/logging");
 
 const app = express();
 const corsOptions = {
@@ -24,7 +23,7 @@ logger.debug('cors options = ', corsOptions);
 
 app.use(express.json())
 app.use(cors(corsOptions));
-app.use(morgan('dev'));
+app.use(morganMiddleware);
 
 // establish connection
 mongoose.set('strictQuery', true);

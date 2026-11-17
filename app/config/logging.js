@@ -1,4 +1,5 @@
 const winston = require('winston');
+const morgan = require('morgan');
 
 const logLevels = {
     error: 0,
@@ -26,4 +27,13 @@ const logger = winston.createLogger({
     transports: [new winston.transports.Console()],
 });
 
-module.exports = logger;
+const morganMiddleware = morgan(
+    ":method :url :status :res[content-length] - :response-time ms",
+    {
+        stream: {
+            write: (message) => logger.http(message),
+        },
+    },
+);
+
+module.exports = { logger, morganMiddleware };
