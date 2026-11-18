@@ -1,3 +1,5 @@
+const {logger} = require("../config/logging");
+
 // ========== common stages ==========
 const avgTemperaturesStage = {
     $round: [{$avg: ["$avg"]}, 2]
@@ -58,10 +60,10 @@ const DailyTemperature = require("../model/daily-temperature").DailyTemperature;
 
 // data methods
 exports.getDailyWeatherInYears = async function (day, years) {
-    console.log(`Request params: day = ${day}, years = ${years}`);
+    logger.http(`Request params: day = ${day}, years = ${years}`);
     const date = new Date(day);
     const dayMonth = '-' + String((date.getMonth() + 1)).padStart(2, 0) + '-' + String(date.getDate()).padStart(2, '0');
-    console.log(`dayMonth = ${dayMonth}`);
+    logger.debug(`dayMonth = ${dayMonth}`);
 
     const pipeline = [
         {
@@ -88,9 +90,9 @@ exports.getDailyWeatherInYears = async function (day, years) {
         {$sort: {date: -1}},
         {$limit: +years || Number.MAX_SAFE_INTEGER}
     ];
-    console.log(`${JSON.stringify(pipeline, null, 2)}`);
+    logger.debug(`${JSON.stringify(pipeline, null, 2)}`);
     const result = await DailyTemperature.aggregate(pipeline);
-    console.log(`weather for ${day} in ${years | 13} years: ${JSON.stringify(result)}`);
+    logger.http(`weather for ${day} in ${years | 13} years: ${JSON.stringify(result)}`);
     return result;
 
 }
@@ -98,10 +100,10 @@ exports.getDailyWeatherInYears = async function (day, years) {
 exports.getMonthWeather = async function (y, m) {
     const year = parseInt(y, 10);
     const month = parseInt(m, 10);
-    console.log(`getMonthWeather: request params: month = ${month}, year = ${year}`);
+    logger.http(`getMonthWeather: request params: month = ${month}, year = ${year}`);
     const from = new Date(Date.UTC(year, month, 1));
     const to = new Date(Date.UTC(year, month + 1, 1));
-    console.log(`date range for month: [${from}; ${to}]`);
+    logger.info(`date range for month: [${from}; ${to}]`);
 
     const pipeline = [
         {
@@ -125,9 +127,9 @@ exports.getMonthWeather = async function (y, m) {
             $sort: {day: 1}
         }
     ];
-    console.trace(`${JSON.stringify(pipeline, null, 2)}`);
+    logger.debug(`${JSON.stringify(pipeline, null, 2)}`);
     const result = await DailyTemperature.aggregate(pipeline);
-    console.log(`weather for ${from.toLocaleString('default', {month: 'long'})}, ${year}: ${JSON.stringify(result)}`);
+    logger.http(`weather for ${from.toLocaleString('default', {month: 'long'})}, ${year}: ${JSON.stringify(result)}`);
     return result;
 }
 
@@ -200,7 +202,7 @@ exports.getYearsByMonthsTemperature = async function () {
     ];
 
     const result = await DailyTemperature.aggregate(pipeline);
-    console.log('Months temperature ' + JSON.stringify(result) + ' by years');
+    logger.http('Months temperature ' + JSON.stringify(result) + ' by years');
     return result;
 }
 
@@ -342,7 +344,7 @@ exports.getYearsBySeasonsTemperature = async function () {
         sortByYearStage
     ];
     const result = await DailyTemperature.aggregate(pipeline);
-    console.log('Seasons temperature ' + JSON.stringify(result) + ' by years');
+    logger.http('Seasons temperature ' + JSON.stringify(result) + ' by years');
     return result;
 
 }
@@ -389,13 +391,12 @@ exports.getYearsSummary = async function() {
         sortByYearStage
     ];
     const result = await DailyTemperature.aggregate(pipeline);
-    console.log('Temperature ' + JSON.stringify(result) + ' by years');
+    logger.http('Temperature ' + JSON.stringify(result) + ' by years');
     return result;
 }
 
 // service methods
 exports.getYearsToShow = async function () {
-    console.log('getYearsToShow');
     const pipelineLocal = [
         {
             $group: {
@@ -412,7 +413,7 @@ exports.getYearsToShow = async function () {
         },
     ];
     const result = await DailyTemperature.aggregate(pipelineLocal);
-    console.log('weather for ' + JSON.stringify(result) + ' years');
+    logger.http('weather for ' + JSON.stringify(result) + ' years');
     return result[0].maxYear - result[0].minYear + 1;
 }
 
@@ -420,12 +421,12 @@ exports.getYearsToShow = async function () {
 exports.getWeatherForToday = async function () {
     const currentDate = new Date().toISOString()/*.slice(0, 10)*/;
     const result = await DailyTemperature.findOne({data: currentDate});
-    console.log(`weather for ${currentDate}: ${result}`);
+    logger.http(`weather for ${currentDate}: ${result}`);
     return result;
 }
 
 exports.getWeatherAtDay = async function (day) {
     const result = await DailyTemperature.findOne({data: new Date(day)});
-    console.log(`weather for ${day}: ${result}`);
+    logger.http(`weather for ${day}: ${result}`);
     return result;
 }
