@@ -13,6 +13,7 @@ const HTMLParser = require('node-html-parser');
 const httpService = require("./app/service/http-service");
 const DateUtis = require("./app/service/date-utils");
 const {logger, morganMiddleware} = require("./app/config/logging");
+const errorHandler = require("./app/middleware/error-handler");
 
 const app = express();
 const corsOptions = {
@@ -24,6 +25,7 @@ logger.debug('cors options = ', corsOptions);
 app.use(express.json())
 app.use(cors(corsOptions));
 app.use(morganMiddleware);
+app.use(errorHandler);
 
 // establish connection
 mongoose.set('strictQuery', true);
