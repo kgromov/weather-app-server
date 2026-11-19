@@ -1,5 +1,6 @@
 const winston = require('winston');
 const morgan = require('morgan');
+const DailyRotateFile = require('winston-daily-rotate-file');
 
 const logLevels = {
     error: 0,
@@ -26,6 +27,20 @@ const logger = winston.createLogger({
     ),
     transports: [new winston.transports.Console()],
 });
+
+const fileAppender = new DailyRotateFile({
+    filename: "logs/application-%DATE%.log",
+    datePattern: "YYYY-MM-DD",
+    zippedArchive: true,
+    maxSize: "2m",
+    maxFiles: "14d",
+    format: winston.format.combine(
+        winston.format.errors({ stack: true }),
+        winston.format.timestamp(),
+        winston.format.json(),
+    ),
+});
+logger.add(fileAppender);
 
 const morganMiddleware = morgan(
     ":method :url :status :res[content-length] - :response-time ms",

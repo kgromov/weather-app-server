@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const cron = require("node-cron");
-require('dotenv').config();
+require('dotenv').config({quiet: process.env.NODE_ENV === 'PROD'});
 
 const dbConfig = require("./app/config/db-config");
 const webConfig = require("./app/config/web-config");
