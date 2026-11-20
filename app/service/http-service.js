@@ -1,8 +1,9 @@
 const http = require('http');
 const https = require('https');
+const {logger} = require("../config/logging");
 
 exports.get = function(url) {
-    console.log('GET by url = ', url);
+    logger.http(`GET by url = ${url}`);
     return new Promise((resolve, reject) => {
         let client = http;
         // const urlInfo = URL.parse(url, true);

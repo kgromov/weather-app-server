@@ -3,6 +3,7 @@ const webConfig = require("../config/web-config");
 const http = require("./http-service");
 const HTMLParser = require("node-html-parser");
 const DateUtils = require("./date-utils");
+const {logger} = require("../config/logging");
 const WeatherMeasurementDto = dto.WeatherMeasurementDto;
 const TemperatureMeasurementsDto = dto.TemperatureMeasurementsDto;
 
@@ -17,7 +18,7 @@ exports.getTemperature = async function(from, to) {
             .map(day => DateUtils.addDays(from, day))
             .map(date => DateUtils.formatToLocalizedDate(date))
         : [DateUtils.formatToLocalizedDate(to)];
-    console.log('syncDates = ', syncDates, '; length = ', syncDates.length);
+    logger.debug('syncDates = ', syncDates, '; length = ', syncDates.length);
     return Promise.all(syncDates.map(syncDate => syncSinceDatePromise(syncDate)));
 }
 
@@ -30,23 +31,23 @@ function syncSinceDatePromise(date) {
 
 function extractDailyTemperature(date, weatherContent) {
     const root = HTMLParser.parse(weatherContent);
-    console.debug('tables on page = ', root.querySelectorAll('table')?.length ?? 0);
+    logger.debug('tables on page = ', root.querySelectorAll('table')?.length ?? 0);
     const weatherTable = root.querySelector('table.mK1PSQn1,table.iC5eqyQP,table.iC5eqyQP');
     if (!weatherTable) {
-        console.debug(`content = ${root.text}`);
-        console.warn('Content not found for date = ', date);
+        logger.debug(`content = ${root.text}`);
+        logger.warn('Content not found for date = ', date);
     }
     const timeCells = weatherTable.querySelectorAll('thead>tr:nth-child(2)>td');
     const temperatureCells = weatherTable.querySelectorAll('tbody>tr:nth-child(2)>td');
 
     const measurements = [...Array(timeCells.length).keys()]
         .map(i => {
-            // console.trace(i, ': [text] time element: ', timeCells[i].text, ', temperature element = ', temperatureCells[i].text);
+            logger.silly(i, ': [text] time element: ', timeCells[i].text, ', temperature element = ', temperatureCells[i].text);
             let time = timeCells[i].text;
             time = Number.parseInt(time.slice(0, time.indexOf(':')).trim());
             let temperature = Number.parseInt(temperatureCells[i].text.trim());
             return new WeatherMeasurementDto(time, temperature);
         });
-    console.trace('Daily measurements [', date, '] = ', measurements);
+    logger.silly('Daily measurements [', date, '] = ', measurements);
     return new TemperatureMeasurementsDto(new Date(date), measurements);
 }

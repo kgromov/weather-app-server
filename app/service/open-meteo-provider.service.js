@@ -1,13 +1,14 @@
 const dto = require('../model/dto');
 const TemperatureMeasurementsDto = dto.TemperatureMeasurementsDto;
 const webConfig = require("../config/web-config");
+const {logger} = require("../config/logging");
 
 
 exports.getTemperature = async function (from, to) {
     if (from > to) {
         return Promise.reject()
     }
-    console.log(`Fetch data by url = ` + `${webConfig.weatherApiURL}&start_date=${from}&end_date=${to}`);
+    logger.info(`Fetch data by url = ` + `${webConfig.weatherApiURL}&start_date=${from}&end_date=${to}`);
     return fetch(`${webConfig.weatherApiURL}&start_date=${from}&end_date=${to}`)
         .then(res => res.json())
         .then(data => toTemperatureMeasurements(data));
@@ -15,7 +16,7 @@ exports.getTemperature = async function (from, to) {
 
 // Open-Meteo response -> { 'YYYY-MM-DD': TemperatureMeasurementsDto }
 function toTemperatureMeasurements(response) {
-    console.log(`Extracted temperature measurements: ${JSON.stringify(response)}`);
+    logger.info(`Extracted temperature measurements: ${JSON.stringify(response)}`);
     const result = [];
     for (const [date, measurements] of groupByDay(response)) {
         result.push(new TemperatureMeasurementsDto(date, measurements));
